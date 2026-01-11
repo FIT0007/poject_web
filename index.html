@@ -1,38 +1,100 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8">
-  <title>C++ Web App</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>C++ program – webová verze</title>
   <style>
-    body {
-      font-family: system-ui, sans-serif;
-      margin: 40px;
-    }
-    textarea {
-      width: 100%;
-      height: 300px;
-      margin-top: 10px;
-    }
+    body { font-family: system-ui, sans-serif; margin: 32px; max-width: 1100px; }
+    textarea { width: 100%; min-height: 220px; padding: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    button { padding: 10px 14px; cursor: pointer; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin-top: 16px; }
+    .muted { color: #555; }
+    pre { white-space: pre-wrap; word-break: break-word; }
   </style>
 </head>
 <body>
-
   <h1>C++ program – webová verze</h1>
+  <p class="muted">
+    Nejrychlejší: v Excelu označ data → Ctrl+C → tady klikni → Ctrl+V → Zpracovat.
+    (Upload souboru můžeš nechat jako zálohu.)
+  </p>
 
-  <input type="file" id="file" accept=".txt,text/plain">
+  <div class="card">
+    <h3>Vlož data z Excelu</h3>
+    <textarea id="excelInput" placeholder="Sem vlož data z Excelu (Ctrl+V)..."></textarea>
 
-  <h3>Obsah souboru:</h3>
-  <textarea id="output" readonly></textarea>
+    <div class="row" style="margin-top:12px;">
+      <button id="processBtn">Zpracovat</button>
+      <button id="clearBtn">Vymazat</button>
+      <span id="stats" class="muted"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Výsledek</h3>
+    <pre id="result">Zatím nic.</pre>
+  </div>
 
   <script>
-    document.getElementById("file").addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+    function parseExcelClipboard(text) {
+      // odstraní přebytečné prázdné řádky na konci/začátku
+      const trimmed = text.replace(/\r/g, "").trim();
+      if (!trimmed) return [];
 
-      const text = await file.text();
-      document.getElementById("output").value = text;
+      const lines = trimmed.split("\n");
+      // Excel: sloupce oddělené tabulátorem
+      const table = lines.map(line => line.split("\t"));
+      return table;
+    }
+
+    function exampleProcessing(table) {
+      // TODO: sem dáme vaši skutečnou logiku (z C++ programu)
+      // Pro teď jen ukázka:
+      const rows = table.length;
+      const cols = Math.max(...table.map(r => r.length));
+      const firstRow = table[0];
+
+      return [
+        `Načteno řádků: ${rows}`,
+        `Max. sloupců v řádku: ${cols}`,
+        `První řádek: ${JSON.stringify(firstRow)}`
+      ].join("\n");
+    }
+
+    const excelInput = document.getElementById("excelInput");
+    const stats = document.getElementById("stats");
+    const result = document.getElementById("result");
+
+    function refreshStats() {
+      const table = parseExcelClipboard(excelInput.value);
+      if (table.length === 0) {
+        stats.textContent = "";
+        return;
+      }
+      const rows = table.length;
+      const cols = Math.max(...table.map(r => r.length));
+      stats.textContent = `Detekováno: ${rows} řádků, až ${cols} sloupců (tabulátory).`;
+    }
+
+    document.getElementById("processBtn").addEventListener("click", () => {
+      const table = parseExcelClipboard(excelInput.value);
+      if (table.length === 0) {
+        result.textContent = "Nevložil jsi žádná data.";
+        return;
+      }
+      result.textContent = exampleProcessing(table);
     });
-  </script>
 
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      excelInput.value = "";
+      result.textContent = "Zatím nic.";
+      stats.textContent = "";
+    });
+
+    excelInput.addEventListener("input", refreshStats);
+    excelInput.addEventListener("paste", () => setTimeout(refreshStats, 0));
+  </script>
 </body>
 </html>
