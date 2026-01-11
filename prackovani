@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kontrola čísel svárů podle dat</title>
+
+  <style>
+    :root{
+      --bg: #0b1220;
+      --panel: #101a2e;
+      --panel2: #0f172a;
+      --text: #e6eaf2;
+      --muted:#9aa4b2;
+      --border:#21304f;
+      --accent:#6aa9ff;
+      --good:#3ddc97;
+      --bad:#ff5c7a;
+      --warn:#ffcc66;
+      --shadow: 0 10px 30px rgba(0,0,0,.25);
+      --radius: 16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    /* Light theme */
+    body[data-theme="light"]{
+      --bg:#f5f7fb;
+      --panel:#ffffff;
+      --panel2:#ffffff;
+      --text:#0f172a;
+      --muted:#5b6576;
+      --border:#dbe2ee;
+      --accent:#2563eb;
+      --good:#0f9d58;
+      --bad:#dc2626;
+      --warn:#d97706;
+      --shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .topbar{
+      position: sticky;
+      top:0;
+      z-index:10;
+      backdrop-filter: blur(10px);
+      background: color-mix(in srgb, var(--bg) 70%, transparent);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .wrap{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 18px 18px;
+    }
+
+    .headerRow{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content: space-between;
+      flex-wrap:wrap;
+    }
+
+    h1{
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .rightControls{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+    }
+
+    .pill input[type="checkbox"]{
+      width: 18px; height: 18px;
+      accent-color: var(--accent);
+      cursor:pointer;
+    }
+
+    .btn{
+      cursor:pointer;
+      border:1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      transition: transform .05s ease, border-color .2s ease;
+      box-shadow: var(--shadow);
+      font-weight: 600;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+      background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .card h2{
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: .2px;
+      text-transform: uppercase;
+    }
+
+    textarea{
+      width:100%;
+      min-height: 220px;
+      resize: vertical;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--text);
+      padding: 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.35;
+      outline: none;
+    }
+
+    .hint{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .hint code{
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--panel2) 80%, transparent);
+    }
+
+    .stats{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .statRow{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      font-size: 14px;
+    }
+    .statRow strong{ font-weight: 800; }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      border:1px solid var(--border);
+      background: color-mix(in srgb, var(--panel) 80%, transparent);
+    }
+    .badge.good{ border-color: color-mix(in srgb, var(--good) 45%, var(--border)); color: var(--good); }
+    .badge.bad{ border-color: color-mix(in srgb, var(--bad) 45%, var(--border)); color: var(--bad); }
+    .badge.warn{ border-color: color-mix(in srgb, var(--warn) 45%, var(--border)); color: var(--warn); }
+
+    .tableWrap{
+      margin-top: 16px;
+      overflow:auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    table{
+      width:100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 980px;
+      font-size: 13px;
+    }
+
+    thead th{
+      position: sticky;
+      top: 0;
+      background: color-mix(in srgb, var(--panel) 92%, var(--bg));
+      z-index: 5;
+      text-align:left;
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .2px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    tbody td{
+      padding: 10px 12px;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    tbody tr:hover td{
+      background: color-mix(in srgb, var(--accent) 7%, transparent);
+    }
+
+    .mono{ font-family: var(--mono); font-size: 12px; }
+    .muted{ color: var(--muted); }
+    .errors{
+      white-space: normal;
+      min-width: 260px;
+    }
+    .errors ul{
+      margin: 0;
+      padding-left: 18px;
+    }
+    .errors li{ margin: 2px 0; }
+
+    .rowBad td{ background: color-mix(in srgb, var(--bad) 10%, transparent); }
+    .rowWarn td{ background: color-mix(in srgb, var(--warn) 10%, transparent); }
+
+    .footer{
+      margin: 16px 0 28px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align:center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="wrap">
+      <div class="headerRow">
+        <h1>Kontrola čísel svárů podle dat</h1>
+
+        <div class="rightControls">
+          <label class="pill" title="Zobrazí pouze dny, kde je nalezená chyba">
+            <input type="checkbox" id="onlyErrorsCheckbox">
+            <span>🔍 filtr: jen dny s chybami</span>
+          </label>
+
+          <button class="btn" id="clearBtn" title="Vymaže data a tabulku">Vymazat</button>
+
+          <label class="pill" id="themeToggle" title="Přepnout světlý / tmavý režim">
+            <input type="checkbox" id="themeCheckbox">
+            <span id="themeLabel">🌙 Dark mode</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <div class="grid">
+      <section class="card">
+        <h2>Vstupní data</h2>
+        <textarea id="dataInput" spellcheck="false" placeholder="Sem vlož data (Ctrl+V) z Excelu / CSV.
+
+Podporované sloupce (podle tvého screenshotu):
+DATUM  SIZE  SARZE  VZOREK  CISLA SVARU  POCETSVARU  IZO  (cokoliv dalšího ignoruju)
+
+Příklad:
+23.07.2025	1,5	41164	4	24-26	3	G-B432:FA100 RL504 B3"></textarea>
+
+        <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+          <button class="btn primary" id="parseBtn">Načíst / Přepočítat</button>
+          <button class="btn" id="loadDemoBtn" title="Nahraje ukázková data">Demo data</button>
+        </div>
+
+        <div class="hint">
+          Tip: Nejlépe funguje, když kopíruješ přímo z Excelu (tabulátory). Pokud máš CSV s čárkami/ středníky, taky to vezmu.<br>
+          Čísla svaru můžeš mít např. <code>24-26</code> nebo <code>24,25,26</code> nebo <code>24; 25; 26</code>.
+        </div>
+      </section>
+
+      <aside class="card">
+        <h2>Souhrn</h2>
+        <div class="stats" id="stats">
+          <div class="statRow"><span>Řádků načteno</span><strong id="sRows">0</strong></div>
+          <div class="statRow"><span>Dní (unikátní datum)</span><strong id="sDays">0</strong></div>
+          <div class="statRow"><span>Řádků s chybou</span><strong id="sBad">0</strong></div>
+          <div class="statRow"><span>Řádků s varováním</span><strong id="sWarn">0</strong></div>
+          <div class="statRow"><span>OK řádků</span><strong id="sOk">0</strong></div>
+        </div>
+
+        <div class="hint">
+          Kontroluju hlavně:
+          <ul style="margin:8px 0 0 18px; color: var(--muted);">
+            <li>chybějící datum / čísla svaru</li>
+            <li>nesoulad <code>POCETSVARU</code> vs. spočítané kusy</li>
+            <li>nečitelný formát rozsahu</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+
+    <div class="tableWrap" style="margin-top:16px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Size</th>
+            <th>Sarže</th>
+            <th>Vzorek</th>
+            <th>Čísla svaru</th>
+            <th>Počet svarů</th>
+            <th>IZO</th>
+            <th>Stav</th>
+            <th>Chyby / varování</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr>
+            <td class="muted" colspan="9" style="padding:16px;">Vlož data a klikni na <strong>Načíst / Přepočítat</strong>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer">
+      Lokálně v prohlížeči • žádná data nikam neodesílám • uložení tématu je v localStorage
+    </div>
+  </main>
+
+  <script>
+    // ----------------------------
+    // Theme (dark/light)
+    // ----------------------------
+    const themeCheckbox = document.getElementById("themeCheckbox");
+    const themeLabel = document.getElementById("themeLabel");
+
+    function applyTheme(theme){
+      document.body.setAttribute("data-theme", theme);
+      const isLight = theme === "light";
+      themeCheckbox.checked = isLight;
+      themeLabel.textContent = isLight ? "☀️ Light mode" : "🌙 Dark mode";
+      localStorage.setItem("theme", theme);
+    }
+
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    applyTheme(savedTheme);
+
+    themeCheckbox.addEventListener("change", () => {
+      applyTheme(themeCheckbox.checked ? "light" : "dark");
+    });
+
+    // ----------------------------
+    // Parsing helpers
+    // ----------------------------
+    function splitLines(text){
+      return text
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .split("\n")
+        .map(l => l.trim())
+        .filter(l => l.length > 0);
+    }
+
+    function detectDelimiter(line){
+      // Prefer tabs (Excel paste), then semicolon, then comma
+      if (line.includes("\t")) return "\t";
+      if (line.includes(";")) return ";";
+      if (line.includes(",")) return ",";
+      // fallback: multiple spaces
+      return null;
+    }
+
+    function smartSplit(line, delim){
+      if (delim) return line.split(delim).map(s => s.trim());
+      // split by 2+ spaces if no delimiter
+      return line.split(/\s{2,}/).map(s => s.trim());
+    }
+
+    function normalizeHeader(h){
+      return h
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove diacritics
+        .replace(/\s+/g, "")
+        .replace(/_/g,"");
+    }
+
+    // Parse "CISLA SVARU" like:
+    // - "24-26" => 24,25,26
+    // - "24,25,26" or "24; 25; 26" or "24 25 26"
+    // - "24-26, 30, 33-34"
+    function parseWeldNumbers(text){
+      const raw = (text || "").trim();
+      if (!raw) return { numbers: [], problems: ["Chybí čísla svaru."] };
+
+      // unify separators
+      const cleaned = raw
+        .replace(/–|—/g, "-")
+        .replace(/,/g, " ")
+        .replace(/;/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      const parts = cleaned.split(" ").filter(Boolean);
+      const nums = [];
+      const problems = [];
+
+      for (const p of parts){
+        if (/^\d+$/.test(p)){
+          nums.push(parseInt(p, 10));
+          continue;
+        }
+        if (/^\d+-\d+$/.test(p)){
+          const [a,b] = p.split("-").map(x => parseInt(x,10));
+          if (Number.isNaN(a) || Number.isNaN(b)){
+            problems.push(`Nečitelný rozsah: ${p}`);
+            continue;
+          }
+          if (b < a){
+            problems.push(`Rozsah je obráceně (b < a): ${p}`);
+            continue;
+          }
+          for (let x=a; x<=b; x++) nums.push(x);
+          continue;
+        }
+        problems.push(`Neznámý formát: "${p}"`);
+      }
+
+      // remove duplicates + sort
+      const uniq = Array.from(new Set(nums)).sort((a,b)=>a-b);
+      if (uniq.length === 0 && problems.length === 0){
+        problems.push("Čísla svaru se nepodařilo přečíst.");
+      }
+
+      return { numbers: uniq, problems };
+    }
+
+    function toInt(val){
+      if (val === null || val === undefined) return null;
+      const s = String(val).trim().replace(",", ".");
+      if (!s) return null;
+      const n = Number(s);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    // ----------------------------
+    // Core parse + validate
+    // ----------------------------
+    const dataInput = document.getElementById("dataInput");
+    const parseBtn = document.getElementById("parseBtn");
+    const loadDemoBtn = document.getElementById("loadDemoBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const onlyErrorsCheckbox = document.getElementById("onlyErrorsCheckbox");
+    const tbody = document.getElementById("tbody");
+
+    const sRows = document.getElementById("sRows");
+    const sDays = document.getElementById("sDays");
+    const sBad = document.getElementById("sBad");
+    const sWarn = document.getElementById("sWarn");
+    const sOk = document.getElementById("sOk");
+
+    let lastRows = []; // parsed rows with validation
+
+    function render(){
+      const onlyErr = onlyErrorsCheckbox.checked;
+
+      const rows = onlyErr
+        ? lastRows.filter(r => r.status !== "OK")
+        : lastRows;
+
+      tbody.innerHTML = "";
+
+      if (rows.length === 0){
+        tbody.innerHTML = `
+          <tr>
+            <td class="muted" colspan="9" style="padding:16px;">
+              ${lastRows.length === 0 ? "Žádná data." : "Filtr nic nenašel (žádné chyby/varování)."}
+            </td>
+          </tr>`;
+        return;
+      }
+
+      for (const r of rows){
+        const tr = document.createElement("tr");
+        if (r.status === "CHYBA") tr.classList.add("rowBad");
+        if (r.status === "VAROVÁNÍ") tr.classList.add("rowWarn");
+
+        const badgeClass = r.status === "OK" ? "good" : (r.status === "CHYBA" ? "bad" : "warn");
+        const errHtml = r.issues.length
+          ? `<ul>${r.issues.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>`
+          : `<span class="muted">—</span>`;
+
+        tr.innerHTML = `
+          <td class="mono">${escapeHtml(r.datum || "")}</td>
+          <td>${escapeHtml(r.size || "")}</td>
+          <td>${escapeHtml(r.sarze || "")}</td>
+          <td>${escapeHtml(r.vzorek || "")}</td>
+          <td class="mono">${escapeHtml(r.cislaSvaru || "")}</td>
+          <td class="mono">${escapeHtml(r.pocetSvaru || "")}</td>
+          <td>${escapeHtml(r.izo || "")}</td>
+          <td><span class="badge ${badgeClass}">${escapeHtml(r.status)}</span></td>
+          <td class="errors">${errHtml}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function updateStats(){
+      const total = lastRows.length;
+      const bad = lastRows.filter(r => r.status === "CHYBA").length;
+      const warn = lastRows.filter(r => r.status === "VAROVÁNÍ").length;
+      const ok = lastRows.filter(r => r.status === "OK").length;
+      const days = new Set(lastRows.map(r => r.datum).filter(Boolean)).size;
+
+      sRows.textContent = total;
+      sDays.textContent = days;
+      sBad.textContent = bad;
+      sWarn.textContent = warn;
+      sOk.textContent = ok;
+    }
+
+    function parseAll(){
+      const text = dataInput.value || "";
+      const lines = splitLines(text);
+
+      if (lines.length === 0){
+        lastRows = [];
+        updateStats();
+        render();
+        return;
+      }
+
+      // header
+      const headerLine = lines[0];
+      const delim = detectDelimiter(headerLine);
+      const headers = smartSplit(headerLine, delim).map(normalizeHeader);
+
+      // map expected fields (supports variations)
+      const idx = {
+        datum: headers.findIndex(h => h === "datum" || h === "date"),
+        size: headers.findIndex(h => h === "size"),
+        sarze: headers.findIndex(h => h === "sarze" || h === "sarze." || h === "sar"),
+        vzorek: headers.findIndex(h => h === "vzorek" || h === "sample"),
+        cislaSvaru: headers.findIndex(h => h === "cislasvaru" || h === "cislasvaru" || h === "weldnumbers" || h === "cislasvaru"),
+        pocetSvaru: headers.findIndex(h => h === "pocetsvaru" || h === "pocetsvaru" || h === "countwelds"),
+        izo: headers.findIndex(h => h === "izo"),
+      };
+
+      // If first line doesn't look like header (no known cols), treat as data with fixed order
+      const knownCount = Object.values(idx).filter(i => i >= 0).length;
+      const hasHeader = knownCount >= 2;
+
+      const start = hasHeader ? 1 : 0;
+
+      const rows = [];
+      for (let i=start; i<lines.length; i++){
+        const cols = smartSplit(lines[i], delim);
+        const get = (key, fallbackIndex) => {
+          const j = hasHeader ? idx[key] : fallbackIndex;
+          if (j === null || j === undefined || j < 0) return "";
+          return (cols[j] ?? "").trim();
+        };
+
+        const datum = get("datum", 0);
+        const size = get("size", 1);
+        const sarze = get("sarze", 2);
+        const vzorek = get("vzorek", 3);
+        const cislaSvaru = get("cislaSvaru", 4);
+        const pocetSvaru = get("pocetSvaru", 5);
+        const izo = get("izo", 6);
+
+        const issues = [];
+
+        if (!datum) issues.push("Chybí DATUM.");
+        if (!cislaSvaru) issues.push("Chybí CISLA SVARU.");
+
+        // parse weld numbers
+        const parsed = parseWeldNumbers(cislaSvaru);
+        for (const p of parsed.problems) issues.push(p);
+
+        // compare count
+        const expectedCount = parsed.numbers.length;
+        const countVal = toInt(pocetSvaru);
+
+        if (pocetSvaru && (countVal === null || !Number.isInteger(countVal))){
+          issues.push(`POCETSVARU není celé číslo: "${pocetSvaru}"`);
+        }
+        if (countVal !== null && expectedCount > 0 && countVal !== expectedCount){
+          issues.push(`Nesedí počet: POCETSVARU=${countVal}, ale z CISLA SVARU vychází ${expectedCount}.`);
+        }
+
+        // classify
+        let status = "OK";
+        const hasHardError =
+          issues.some(x => x.startsWith("Chybí")) ||
+          issues.some(x => x.includes("nepodařilo")) ||
+          issues.some(x => x.includes("Neznámý formát")) ||
+          issues.some(x => x.includes("Nesedí počet")) ||
+          issues.some(x => x.includes("obráceně"));
+
+        const hasSoftWarn =
+          !hasHardError && issues.length > 0;
+
+        if (hasHardError) status = "CHYBA";
+        else if (hasSoftWarn) status = "VAROVÁNÍ";
+
+        rows.push({
+          datum, size, sarze, vzorek, cislaSvaru, pocetSvaru, izo,
+          status,
+          issues
+        });
+      }
+
+      lastRows = rows;
+      updateStats();
+      render();
+    }
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    // ----------------------------
+    // UI events
+    // ----------------------------
+    parseBtn.addEventListener("click", parseAll);
+    onlyErrorsCheckbox.addEventListener("change", render);
+
+    clearBtn.addEventListener("click", () => {
+      dataInput.value = "";
+      lastRows = [];
+      updateStats();
+      render();
+    });
+
+    loadDemoBtn.addEventListener("click", () => {
+      dataInput.value =
+`DATUM\tSIZE\tSARZE\tVZOREK\tCISLA SVARU\tPOCETSVARU\tIZO
+23.07.2025\t1,5\t41164\t4\t24-26\t3\tG-B432:FA100 RL504 B3
+23.07.2025\t3\t41164\t4\t10-12\t2\tG-B432:FA100 RL504 B3
+24.07.2025\t2\t\t4\t30,31,32\t3\tG-B999:FA200 RL111 A1
+\t2\t50000\t1\t40-42\t3\tG-X111:FA300 RL222 C2
+25.07.2025\t1\t50001\t2\t60-58\t3\tG-X222:FA300 RL222 C2`;
+      parseAll();
+    });
+
+    // Auto parse on paste (nice UX)
+    dataInput.addEventListener("paste", () => {
+      setTimeout(parseAll, 0);
+    });
+
+    // initial render
+    updateStats();
+    render();
+  </script>
+</body>
+</html>
