@@ -6,41 +6,112 @@
   <title>Kontrola čísel svárů</title>
 
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 32px; max-width: 1200px; }
+    /* =========================
+       Theme (CSS variables)
+       ========================= */
+    :root {
+      color-scheme: light dark; /* umožní hezké nativní prvky (scrollbar, inputs) */
+      --bg: #ffffff;
+      --text: #111;
+      --muted: #555;
+      --card-bg: rgba(255,255,255,0.92);
+      --panel-bg: #ffffff;
+      --border: rgba(0,0,0,0.15);
+      --border-soft: rgba(0,0,0,0.12);
+      --hover: rgba(0,0,0,0.04);
+      --mono-bg: rgba(0,0,0,0.03);
+      --mono-border: rgba(0,0,0,0.12);
+      --btn-bg: #f7f7f7;
+      --btn-border: #bbb;
+      --btn-hover: #efefef;
+      --code-bg: #f3f3f3;
+      --shadow: 0 1px 0 rgba(0,0,0,0.03);
+    }
+
+    /* Dark overrides */
+    [data-theme="dark"] {
+      --bg: #0b0f14;
+      --text: #e7edf4;
+      --muted: #aab6c3;
+      --card-bg: rgba(18, 25, 34, 0.92);
+      --panel-bg: #0f1620;
+      --border: rgba(255,255,255,0.14);
+      --border-soft: rgba(255,255,255,0.12);
+      --hover: rgba(255,255,255,0.06);
+      --mono-bg: rgba(255,255,255,0.06);
+      --mono-border: rgba(255,255,255,0.14);
+      --btn-bg: rgba(255,255,255,0.06);
+      --btn-border: rgba(255,255,255,0.18);
+      --btn-hover: rgba(255,255,255,0.10);
+      --code-bg: rgba(255,255,255,0.09);
+      --shadow: 0 1px 0 rgba(0,0,0,0.35);
+    }
+
+    /* =========================
+       Base layout
+       ========================= */
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 32px;
+      max-width: 1200px;
+      background: var(--bg);
+      color: var(--text);
+    }
     h1 { margin-bottom: 8px; }
-    .muted { color: #555; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin-top: 16px; }
+    .muted { color: var(--muted); }
+    .small { font-size: 13px; }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+      background: var(--panel-bg);
+      box-shadow: var(--shadow);
+    }
 
     textarea {
       width: 100%;
       min-height: 220px;
       padding: 12px;
       border-radius: 10px;
-      border: 1px solid #ccc;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       font-size: 13px;
       line-height: 1.35;
+      outline: none;
     }
+    textarea:focus {
+      box-shadow: 0 0 0 3px rgba(80, 140, 255, 0.18);
+    }
+
     .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
     button {
       padding: 10px 14px;
       border-radius: 10px;
-      border: 1px solid #bbb;
-      background: #f7f7f7;
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--text);
       cursor: pointer;
       font-weight: 600;
     }
-    button:hover { background: #efefef; }
-    .small { font-size: 13px; }
-    code { background: #f3f3f3; padding: 2px 6px; border-radius: 6px; }
+    button:hover { background: var(--btn-hover); }
+
+    code {
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
     ul { margin-top: 8px; }
 
     .resultWrap { display: grid; gap: 10px; }
 
     .day {
-      border: 1px solid rgba(0,0,0,0.15);
+      border: 1px solid var(--border);
       border-radius: 12px;
-      background: rgba(255,255,255,0.92);
+      background: var(--card-bg);
       overflow: hidden;
     }
 
@@ -49,13 +120,25 @@
       padding: 12px 14px;
       font-weight: 700;
       user-select: none;
+      list-style: none;
     }
+    /* remove default marker spacing (still keeps arrow) */
+    .day summary::-webkit-details-marker { display: none; }
+    .day summary::before {
+      content: "▸";
+      display: inline-block;
+      width: 18px;
+      margin-right: 6px;
+      transform: translateY(-1px);
+      color: var(--muted);
+    }
+    .day[open] summary::before { content: "▾"; }
 
-    .day summary:hover { background: rgba(0,0,0,0.04); }
+    .day summary:hover { background: var(--hover); }
 
     .day .inside {
       padding: 12px 14px;
-      border-top: 1px solid rgba(0,0,0,0.08);
+      border-top: 1px solid var(--border-soft);
     }
 
     .kv {
@@ -65,7 +148,6 @@
       margin: 0 0 10px 0;
       font-size: 13px;
     }
-
     .kv div { padding: 2px 0; }
 
     .badge {
@@ -73,9 +155,10 @@
       padding: 2px 8px;
       border-radius: 999px;
       font-size: 12px;
-      border: 1px solid rgba(0,0,0,0.15);
-      background: rgba(0,0,0,0.03);
+      border: 1px solid var(--border);
+      background: var(--mono-bg);
       margin-left: 8px;
+      color: var(--text);
     }
 
     .blockTitle { margin: 10px 0 6px; font-weight: 700; }
@@ -85,13 +168,13 @@
       font-size: 13px;
       white-space: pre-wrap;
       word-break: break-word;
-      background: rgba(0,0,0,0.03);
-      border: 1px solid rgba(0,0,0,0.12);
+      background: var(--mono-bg);
+      border: 1px solid var(--mono-border);
       border-radius: 10px;
       padding: 10px;
     }
 
-    /* --- Filter UI --- */
+    /* --- top toolbar (filter + theme) --- */
     .toolbar {
       display:flex;
       gap:12px;
@@ -110,16 +193,64 @@
       display:inline-flex;
       align-items:center;
       gap:8px;
-      border:1px solid rgba(0,0,0,0.15);
+      border:1px solid var(--border);
       border-radius: 999px;
       padding: 8px 10px;
-      background: rgba(0,0,0,0.02);
+      background: var(--mono-bg);
       font-size: 13px;
     }
     .pill input { transform: translateY(1px); }
-    .hint {
+
+    .hint { font-size: 13px; color: var(--muted); }
+
+    .rightTools {
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    .themeToggle {
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      border:1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: var(--mono-bg);
+      cursor:pointer;
+      user-select:none;
       font-size: 13px;
-      color: #666;
+    }
+    .themeToggle input { display:none; }
+
+    .switch {
+      width: 42px;
+      height: 24px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--btn-bg);
+      position: relative;
+      flex: 0 0 auto;
+    }
+    .knob {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--text);
+      position: absolute;
+      top: 50%;
+      left: 3px;
+      transform: translateY(-50%);
+      transition: left .18s ease;
+      opacity: 0.9;
+    }
+    [data-theme="dark"] .knob { left: 21px; }
+
+    .themeLabel {
+      color: var(--text);
+      font-weight: 600;
     }
   </style>
 </head>
@@ -128,7 +259,11 @@
   <h1>Kontrola čísel svárů podle data</h1>
 
   <div class="card">
-    <h3>tu jebni tabulku (ctrl+c - ctrl+v, to zvládneš)</h3>
+    <h3>Vstup z Excelu</h3>
+    <p class="muted small">
+      V Excelu označ tabulku <b>včetně hlavičky</b> → Ctrl+C → sem Ctrl+V → Zpracovat.
+      Sloupec čísel svaru může být např. <code>12</code>, <code>2-11</code>, <code>1,2</code>, <code>39,40</code>, nebo <code>1,2,5-7</code>.
+    </p>
 
     <textarea id="excelInput" placeholder="Sem vlož tabulku z Excelu (Ctrl+V)..."></textarea>
 
@@ -143,6 +278,7 @@
       <ul class="muted small">
         <li>Musí být vložená tabulka <b>včetně prvního řádku s hlavičkami</b>.</li>
         <li>Sloupce musí obsahovat něco jako <b>DATUM</b> a <b>ČÍSLA SVAR…</b> (diakritika nevadí).</li>
+        <li>Pokud některé řádky nemají datum, vezme se <b>poslední datum nad nimi</b> (běžné u Excelu).</li>
       </ul>
     </details>
   </div>
@@ -151,27 +287,87 @@
     <div class="toolbar">
       <div>
         <h3 style="margin:0;">Výsledek</h3>
+        <div id="topInfo" class="hint">Zatím nic.</div>
       </div>
 
-      <div class="filters">
-        <label class="pill" title="Zobrazí všechny dny">
-          <input type="radio" name="filterMode" value="all" checked>
-          Zobrazit vše
-        </label>
+      <div class="rightTools">
+        <div class="filters">
+          <label class="pill" title="Zobrazí všechny dny">
+            <input type="radio" name="filterMode" value="all" checked>
+            Zobrazit vše
+          </label>
 
-        <label class="pill" title="Zobrazí jen dny, kde jsou duplicity nebo chybí čísla">
-          <input type="radio" name="filterMode" value="errorsOnly">
-          Jen dny s chybami
+          <label class="pill" title="Zobrazí jen dny, kde jsou duplicity nebo chybí čísla">
+            <input type="radio" name="filterMode" value="errorsOnly">
+            Jen dny s chybami
+          </label>
+        </div>
+
+        <!-- Theme toggle -->
+        <label class="themeToggle" id="themeToggle" title="Přepnout světlý / tmavý režim">
+          <input type="checkbox" id="themeCheckbox" />
+          <span class="switch" aria-hidden="true"><span class="knob"></span></span>
+          <span class="themeLabel" id="themeLabel">Dark mode</span>
         </label>
       </div>
     </div>
 
     <div id="result" class="resultWrap">
-      <div class="muted">kdo moc ťuká, málo šuká.</div>
+      <div class="muted">Zatím nic.</div>
     </div>
   </div>
 
   <script>
+    /* =========================
+       Theme logic (localStorage + system)
+       ========================= */
+    const THEME_KEY = "weld_theme"; // "light" | "dark"
+    const themeCheckbox = document.getElementById("themeCheckbox");
+    const themeLabel = document.getElementById("themeLabel");
+
+    function getSystemPrefersDark() {
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+
+    function getSavedTheme() {
+      const v = localStorage.getItem(THEME_KEY);
+      return (v === "dark" || v === "light") ? v : null;
+    }
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      themeCheckbox.checked = (theme === "dark");
+      themeLabel.textContent = theme === "dark" ? "Dark mode" : "Light mode";
+    }
+
+    function initTheme() {
+      const saved = getSavedTheme();
+      if (saved) applyTheme(saved);
+      else applyTheme(getSystemPrefersDark() ? "dark" : "light");
+    }
+
+    initTheme();
+
+    // If user hasn't chosen anything yet, follow system changes:
+    const mql = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+    if (mql) {
+      mql.addEventListener("change", () => {
+        if (!getSavedTheme()) applyTheme(getSystemPrefersDark() ? "dark" : "light");
+      });
+    }
+
+    document.getElementById("themeToggle").addEventListener("click", (e) => {
+      // zabrání double togglu při kliknutí na label
+      e.preventDefault();
+      const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      const next = current === "dark" ? "light" : "dark";
+      localStorage.setItem(THEME_KEY, next);
+      applyTheme(next);
+    });
+
+    /* =========================
+       App logic
+       ========================= */
     function _trim(s) {
       return String(s ?? "").replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
     }
@@ -310,7 +506,7 @@
     const result = document.getElementById("result");
     const topInfo = document.getElementById("topInfo");
 
-    // ------------------ state (pro filtr) ------------------
+    // ------------------ state (for filter) ------------------
     let lastRender = null; // { byDate, errors, datesSorted, missingMode, dayStatsByDate }
 
     function getFilterMode() {
@@ -337,12 +533,8 @@
       const totalDays = datesSorted.length;
       const badDays = datesSorted.filter(d => dayStatsByDate.get(d).hasIssue).length;
 
-      // info nahoře
-      if (mode === "errorsOnly") {
-        topInfo.textContent = `Zobrazeno: jen dny s chybami • ${badDays}/${totalDays} dnů`;
-      } else {
-        topInfo.textContent = `Zobrazeno: vše • ${totalDays} dnů (chybové dny: ${badDays})`;
-      }
+      if (mode === "errorsOnly") topInfo.textContent = `Zobrazeno: jen dny s chybami • ${badDays}/${totalDays} dnů`;
+      else topInfo.textContent = `Zobrazeno: vše • ${totalDays} dnů (chybové dny: ${badDays})`;
 
       result.innerHTML = "";
 
@@ -414,7 +606,6 @@
         }
       }
 
-      // chyby až dolů (nefiltrujeme — je to spíš log)
       if (errors.length) {
         const warn = document.createElement("details");
         warn.className = "day";
@@ -467,9 +658,7 @@
         const weldCell = cols[weldIdx] ?? "";
 
         const p = parseWeldCellToNumbers(weldCell);
-        if (p.errors.length) {
-          errors.push(`Řádek ${r + 2} (${date}): ${p.errors.join("; ")} | hodnota: "${weldCell}"`);
-        }
+        if (p.errors.length) errors.push(`Řádek ${r + 2} (${date}): ${p.errors.join("; ")} | hodnota: "${weldCell}"`);
 
         if (!byDate.has(date)) byDate.set(date, []);
         const arr = byDate.get(date);
@@ -492,7 +681,6 @@
         return new Date(pa[2], pa[1]-1, pa[0]) - new Date(pb[2], pb[1]-1, pb[0]);
       });
 
-      // předpočítat statistiky pro každý den (kvůli filtru)
       const dayStatsByDate = new Map();
       for (const date of datesSorted) {
         const values = byDate.get(date);
@@ -515,7 +703,6 @@
       topInfo.textContent = "Zatím nic.";
     });
 
-    // filtr přepíná render bez přepočtu
     document.querySelectorAll('input[name="filterMode"]').forEach(el => {
       el.addEventListener("change", () => renderFromState());
     });
