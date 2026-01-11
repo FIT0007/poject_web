@@ -311,7 +311,7 @@
       <label class="themeToggle" id="themeToggle" title="Přepnout světlý / tmavý režim">
         <input type="checkbox" id="themeCheckbox" />
         <span class="switch" aria-hidden="true"><span class="knob"></span></span>
-        <span class="themeLabel" id="themeLabel">Dark mode</span>
+        <span class="themeLabel" id="themeLabel">🌓Dark mode</span>
       </label>
     </div>
 
@@ -319,16 +319,14 @@
       <div class="card">
         <h3 style="margin:0 0 8px;">Vstupní data</h3>
         <div class="muted small" style="margin-bottom:10px;">
-          Nejlépe funguje: označ v Excelu tabulku <b>včetně hlavičky</b> (musí obsahovat <code>DATUM</code> a <code>CISLA SVARU</code>)
-          → Ctrl+C → sem Ctrl+V → <b>Načíst / Přepočítat</b>.<br/>
-          Ve sloupci čísla sváru může být např. <code>24-26</code> nebo <code>24,25,26</code> nebo <code>1,2,5-7</code>.
+          označ v Excelu tabulku <b>včetně hlavičky</b> (musí obsahovat <code>DATUM</code> a <code>CISLA SVARU</code>)
+          → Ctrl+C → sem Ctrl+V → <b>Prošňupej</b>.<br/>
         </div>
 
         <textarea id="excelInput" placeholder="Sem vlož tabulku z Excelu..."></textarea>
 
         <div class="row">
-          <button id="processBtn">Načíst / Přepočítat</button>
-          <button id="demoBtn">Demo data</button>
+          <button id="processBtn">Prošňupej</button>
           <button id="clearBtn">Vymazat</button>
 
           <div class="muted" id="stats"></div>
@@ -336,10 +334,9 @@
 
         <details style="margin-top:10px;">
           <summary class="muted" style="cursor:pointer;">Tip</summary>
-          <div class="muted small" style="margin-top:8px;">
-            Pokud lepíš CSV, může se to rozbít kvůli čárkám v <code>CISLA SVARU</code>.
-            Nejlepší je kopírovat přímo z Excelu (Excel kopíruje jako tabulátory = TSV).
-          </div>
+          <div style="margin-top:8px; font-size:13px;">
+          Mrdej na to a dej si pivson
+  </div>
         </details>
       </div>
 
@@ -352,7 +349,7 @@
         <div class="stat"><span>OK dny</span> <b id="sumOkDays">0</b></div>
 
         <div class="muted small">
-          Kontroluju hlavně:
+          Kontroluje:
           <ul style="margin:8px 0 0 18px;">
             <li>duplicity v rámci dne</li>
             <li>chybějící čísla mezi min..max v rámci dne</li>
@@ -365,7 +362,7 @@
       <div class="resultTop">
         <div>
           <h3 style="margin:0;">Výsledek</h3>
-          <div class="muted small" id="shownInfo">Zatím nic.</div>
+          <div class="muted small" id="shownInfo">Moc chlastáš, málo koíruješ.</div>
         </div>
 
         <div class="pill">
