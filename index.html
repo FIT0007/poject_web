@@ -1,703 +1,867 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="cs">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kontrola čísel svárů podle dat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Kontrola čísel svárů podle data</title>
 
   <style>
     :root{
+      --bg: #f6f7fb;
+      --text: #0b1220;
+      --muted: rgba(11,18,32,.68);
+      --card: rgba(255,255,255,.78);
+      --card2: rgba(255,255,255,.92);
+      --border: rgba(11,18,32,.14);
+      --border2: rgba(11,18,32,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --chip: rgba(11,18,32,.06);
+      --chipBorder: rgba(11,18,32,.14);
+      --accent: #2563eb;
+      --good: #16a34a;
+      --warn: #d97706;
+      --bad: #ef4444;
+      --monoBg: rgba(11,18,32,.04);
+      --monoBorder: rgba(11,18,32,.12);
+    }
+
+    body.dark{
       --bg: #0b1220;
-      --panel: #101a2e;
-      --panel2: #0f172a;
-      --text: #e6eaf2;
-      --muted:#9aa4b2;
-      --border:#21304f;
-      --accent:#6aa9ff;
-      --good:#3ddc97;
-      --bad:#ff5c7a;
-      --warn:#ffcc66;
-      --shadow: 0 10px 30px rgba(0,0,0,.25);
-      --radius: 16px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --text: #e9eefb;
+      --muted: rgba(233,238,251,.70);
+      --card: rgba(17,27,46,.78);
+      --card2: rgba(17,27,46,.92);
+      --border: rgba(233,238,251,.14);
+      --border2: rgba(233,238,251,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --chip: rgba(233,238,251,.06);
+      --chipBorder: rgba(233,238,251,.14);
+      --monoBg: rgba(233,238,251,.06);
+      --monoBorder: rgba(233,238,251,.14);
     }
 
-    /* Light theme */
-    body[data-theme="light"]{
-      --bg:#f5f7fb;
-      --panel:#ffffff;
-      --panel2:#ffffff;
-      --text:#0f172a;
-      --muted:#5b6576;
-      --border:#dbe2ee;
-      --accent:#2563eb;
-      --good:#0f9d58;
-      --bad:#dc2626;
-      --warn:#d97706;
-      --shadow: 0 10px 30px rgba(2,6,23,.08);
-    }
-
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
+    html, body { height: 100%; }
     body{
-      margin:0;
-      font-family: var(--sans);
-      background: var(--bg);
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.18), transparent 60%),
+                  radial-gradient(900px 500px at 90% 0%, rgba(16,185,129,.14), transparent 55%),
+                  var(--bg);
       color: var(--text);
-    }
-
-    .topbar{
-      position: sticky;
-      top:0;
-      z-index:10;
-      backdrop-filter: blur(10px);
-      background: color-mix(in srgb, var(--bg) 70%, transparent);
-      border-bottom: 1px solid var(--border);
     }
 
     .wrap{
       max-width: 1200px;
-      margin: 0 auto;
-      padding: 18px 18px;
+      margin: 28px auto 60px;
+      padding: 0 18px;
     }
 
-    .headerRow{
+    .headerBar{
       display:flex;
-      gap:12px;
       align-items:center;
-      justify-content: space-between;
-      flex-wrap:wrap;
+      justify-content:space-between;
+      gap: 16px;
+      margin-bottom: 18px;
     }
 
     h1{
       margin: 0;
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 38px;
       letter-spacing: .2px;
     }
 
-    .rightControls{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
+    .muted{ color: var(--muted); }
+    .small{ font-size: 13px; }
+
+    .card{
+      border: 1px solid var(--border);
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      backdrop-filter: blur(10px);
     }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1.6fr .9fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 980px){
+      .grid2{ grid-template-columns: 1fr; }
+      h1{ font-size: 30px; }
+    }
+
+    textarea{
+      width: 100%;
+      min-height: 230px;
+      border-radius: 14px;
+      border: 1px solid var(--border2);
+      background: rgba(0,0,0,0.02);
+      color: var(--text);
+      padding: 12px;
+      outline: none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.35;
+      resize: vertical;
+    }
+
+    body.dark textarea{ background: rgba(255,255,255,0.03); }
+
+    .row{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    button{
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.10);
+      color: var(--text);
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .04s ease, background .2s ease;
+    }
+    button:hover{ background: rgba(255,255,255,.16); }
+    button:active{ transform: translateY(1px); }
 
     .pill{
       display:inline-flex;
       align-items:center;
-      gap:8px;
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      background: var(--panel);
+      gap: 8px;
+      padding: 8px 12px;
       border-radius: 999px;
-      box-shadow: var(--shadow);
-    }
-
-    .pill input[type="checkbox"]{
-      width: 18px; height: 18px;
-      accent-color: var(--accent);
-      cursor:pointer;
-    }
-
-    .btn{
-      cursor:pointer;
-      border:1px solid var(--border);
-      background: var(--panel);
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 12px;
-      transition: transform .05s ease, border-color .2s ease;
-      box-shadow: var(--shadow);
-      font-weight: 600;
-    }
-    .btn:active{ transform: translateY(1px); }
-    .btn.primary{
-      border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
-      background: color-mix(in srgb, var(--accent) 14%, var(--panel));
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap: 16px;
-      margin-top: 16px;
-    }
-
-    @media (max-width: 980px){
-      .grid{ grid-template-columns: 1fr; }
-    }
-
-    .card{
-      background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 14px;
+      background: rgba(255,255,255,.10);
     }
 
-    .card h2{
-      margin: 0 0 10px 0;
-      font-size: 14px;
-      color: var(--muted);
-      font-weight: 700;
-      letter-spacing: .2px;
-      text-transform: uppercase;
-    }
-
-    textarea{
-      width:100%;
-      min-height: 220px;
-      resize: vertical;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: var(--panel2);
-      color: var(--text);
-      padding: 12px;
-      font-family: var(--mono);
-      font-size: 12px;
-      line-height: 1.35;
-      outline: none;
-    }
-
-    .hint{
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.4;
-    }
-    .hint code{
-      font-family: var(--mono);
-      font-size: 12px;
-      padding: 2px 6px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: color-mix(in srgb, var(--panel2) 80%, transparent);
-    }
-
-    .stats{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .statRow{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: var(--panel2);
-      font-size: 14px;
-    }
-    .statRow strong{ font-weight: 800; }
-
-    .badge{
+    .checkbox{
       display:inline-flex;
       align-items:center;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 12px;
-      border:1px solid var(--border);
-      background: color-mix(in srgb, var(--panel) 80%, transparent);
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 650;
     }
-    .badge.good{ border-color: color-mix(in srgb, var(--good) 45%, var(--border)); color: var(--good); }
-    .badge.bad{ border-color: color-mix(in srgb, var(--bad) 45%, var(--border)); color: var(--bad); }
-    .badge.warn{ border-color: color-mix(in srgb, var(--warn) 45%, var(--border)); color: var(--warn); }
+    .checkbox input{ transform: translateY(1px); }
 
-    .tableWrap{
-      margin-top: 16px;
-      overflow:auto;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--panel);
-      box-shadow: var(--shadow);
+    .summaryBox{
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
     }
-
-    table{
-      width:100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      min-width: 980px;
+    .stat{
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,.06);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
       font-size: 13px;
     }
-
-    thead th{
-      position: sticky;
-      top: 0;
-      background: color-mix(in srgb, var(--panel) 92%, var(--bg));
-      z-index: 5;
-      text-align:left;
-      padding: 12px 12px;
-      border-bottom: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 12px;
+    .stat b{
+      font-size: 14px;
       letter-spacing: .2px;
-      text-transform: uppercase;
-      white-space: nowrap;
     }
 
-    tbody td{
-      padding: 10px 12px;
-      border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
-      vertical-align: top;
-      white-space: nowrap;
+    .resultCard{
+      margin-top: 14px;
     }
 
-    tbody tr:hover td{
-      background: color-mix(in srgb, var(--accent) 7%, transparent);
+    .resultTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 10px;
     }
 
-    .mono{ font-family: var(--mono); font-size: 12px; }
-    .muted{ color: var(--muted); }
-    .errors{
-      white-space: normal;
-      min-width: 260px;
-    }
-    .errors ul{
-      margin: 0;
-      padding-left: 18px;
-    }
-    .errors li{ margin: 2px 0; }
+    .resultWrap{ display: grid; gap: 10px; }
 
-    .rowBad td{ background: color-mix(in srgb, var(--bad) 10%, transparent); }
-    .rowWarn td{ background: color-mix(in srgb, var(--warn) 10%, transparent); }
+    details.day{
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--card2);
+      overflow:hidden;
+    }
 
-    .footer{
-      margin: 16px 0 28px;
-      color: var(--muted);
+    details.day summary{
+      cursor: pointer;
+      padding: 12px 14px;
+      font-weight: 800;
+      display:flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items:center;
+      user-select:none;
+    }
+
+    details.day summary:hover{ background: rgba(255,255,255,.06); }
+
+    .sumLeft{ display:flex; align-items:center; gap: 10px; }
+    .sumRight{ display:flex; align-items:center; gap: 8px; flex-wrap: wrap; justify-content:flex-end; }
+
+    .tag{
+      display:inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
       font-size: 12px;
-      text-align:center;
+      border: 1px solid var(--chipBorder);
+      background: var(--chip);
+      white-space: nowrap;
+    }
+    .tag.good{ border-color: rgba(22,163,74,.45); background: rgba(22,163,74,.12); color: var(--good); }
+    .tag.bad{ border-color: rgba(239,68,68,.45); background: rgba(239,68,68,.12); color: var(--bad); }
+    .tag.warn{ border-color: rgba(217,119,6,.45); background: rgba(217,119,6,.12); color: var(--warn); }
+
+    .inside{
+      padding: 12px 14px 14px;
+      border-top: 1px solid var(--border2);
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns: 240px 1fr;
+      gap: 6px 12px;
+      margin: 0 0 12px 0;
+      font-size: 13px;
+    }
+    .kv .k{ color: var(--muted); }
+
+    .blockTitle{ margin: 10px 0 6px; font-weight: 800; }
+
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: var(--monoBg);
+      border: 1px solid var(--monoBorder);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    /* Toggle (dark mode) */
+    .themeToggle{
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      user-select:none;
+      cursor:pointer;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.10);
+      font-weight: 750;
+    }
+    .themeToggle input{ display:none; }
+    .switch{
+      width: 44px; height: 26px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.12);
+      position: relative;
+      display:inline-block;
+      flex: 0 0 auto;
+    }
+    .knob{
+      width: 20px; height: 20px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.85);
+      position:absolute;
+      top: 50%;
+      left: 3px;
+      transform: translateY(-50%);
+      transition: left .18s ease;
+    }
+    body.dark .knob{ left: 21px; }
+    body.dark .switch{ background: rgba(37,99,235,.22); border-color: rgba(37,99,235,.35); }
+
+    code{
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: var(--chip);
+      border: 1px solid var(--chipBorder);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
     }
   </style>
 </head>
 
 <body>
-  <div class="topbar">
-    <div class="wrap">
-      <div class="headerRow">
-        <h1>Kontrola čísel svárů podle dat</h1>
+  <div class="wrap">
+    <div class="headerBar">
+      <div>
+        <h1>Kontrola čísel svárů podle data</h1>
+        <div class="muted small" style="margin-top:6px;">
+          Kontroluje se <b>jen</b>: <b>duplicity</b> a <b>chybějící čísla v rozsahu min..max</b> pro každý den.
+        </div>
+      </div>
 
-        <div class="rightControls">
-          <label class="pill" title="Zobrazí pouze dny, kde je nalezená chyba">
-            <input type="checkbox" id="onlyErrorsCheckbox">
-            <span>🔍 filtr: jen dny s chybami</span>
-          </label>
+      <!-- Dark mode vpravo nahoře -->
+      <label class="themeToggle" id="themeToggle" title="Přepnout světlý / tmavý režim">
+        <input type="checkbox" id="themeCheckbox" />
+        <span class="switch" aria-hidden="true"><span class="knob"></span></span>
+        <span class="themeLabel" id="themeLabel">Dark mode</span>
+      </label>
+    </div>
 
-          <button class="btn" id="clearBtn" title="Vymaže data a tabulku">Vymazat</button>
+    <div class="grid2">
+      <div class="card">
+        <h3 style="margin:0 0 8px;">Vstupní data</h3>
+        <div class="muted small" style="margin-bottom:10px;">
+          Nejlépe funguje: označ v Excelu tabulku <b>včetně hlavičky</b> (musí obsahovat <code>DATUM</code> a <code>CISLA SVARU</code>)
+          → Ctrl+C → sem Ctrl+V → <b>Načíst / Přepočítat</b>.<br/>
+          Ve sloupci čísla sváru může být např. <code>24-26</code> nebo <code>24,25,26</code> nebo <code>1,2,5-7</code>.
+        </div>
 
-          <label class="pill" id="themeToggle" title="Přepnout světlý / tmavý režim">
-            <input type="checkbox" id="themeCheckbox">
-            <span id="themeLabel">🌙 Dark mode</span>
+        <textarea id="excelInput" placeholder="Sem vlož tabulku z Excelu..."></textarea>
+
+        <div class="row">
+          <button id="processBtn">Načíst / Přepočítat</button>
+          <button id="demoBtn">Demo data</button>
+          <button id="clearBtn">Vymazat</button>
+
+          <div class="muted" id="stats"></div>
+        </div>
+
+        <details style="margin-top:10px;">
+          <summary class="muted" style="cursor:pointer;">Tip</summary>
+          <div class="muted small" style="margin-top:8px;">
+            Pokud lepíš CSV, může se to rozbít kvůli čárkám v <code>CISLA SVARU</code>.
+            Nejlepší je kopírovat přímo z Excelu (Excel kopíruje jako tabulátory = TSV).
+          </div>
+        </details>
+      </div>
+
+      <div class="card summaryBox">
+        <h3 style="margin:0 0 6px;">Souhrn</h3>
+
+        <div class="stat"><span>Řádků načteno</span> <b id="sumRows">0</b></div>
+        <div class="stat"><span>Dní (unikátní datum)</span> <b id="sumDays">0</b></div>
+        <div class="stat"><span>Dny s chybou (dup/chybí)</span> <b id="sumBadDays">0</b></div>
+        <div class="stat"><span>OK dny</span> <b id="sumOkDays">0</b></div>
+
+        <div class="muted small">
+          Kontroluju hlavně:
+          <ul style="margin:8px 0 0 18px;">
+            <li>duplicity v rámci dne</li>
+            <li>chybějící čísla mezi min..max v rámci dne</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card resultCard">
+      <div class="resultTop">
+        <div>
+          <h3 style="margin:0;">Výsledek</h3>
+          <div class="muted small" id="shownInfo">Zatím nic.</div>
+        </div>
+
+        <div class="pill">
+          <label class="checkbox" title="Zobrazit jen dny, kde je duplicita nebo chybí číslo v min..max">
+            <input type="checkbox" id="onlyErrors" />
+            🔍 filtr: jen dny s chybami
           </label>
         </div>
+      </div>
+
+      <div id="result" class="resultWrap">
+        <div class="muted">Zatím nic.</div>
       </div>
     </div>
   </div>
 
-  <main class="wrap">
-    <div class="grid">
-      <section class="card">
-        <h2>Vstupní data</h2>
-        <textarea id="dataInput" spellcheck="false" placeholder="Sem vlož data (Ctrl+V) z Excelu / CSV.
-
-Podporované sloupce (podle tvého screenshotu):
-DATUM  SIZE  SARZE  VZOREK  CISLA SVARU  POCETSVARU  IZO  (cokoliv dalšího ignoruju)
-
-Příklad:
-23.07.2025	1,5	41164	4	24-26	3	G-B432:FA100 RL504 B3"></textarea>
-
-        <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
-          <button class="btn primary" id="parseBtn">Načíst / Přepočítat</button>
-          <button class="btn" id="loadDemoBtn" title="Nahraje ukázková data">Demo data</button>
-        </div>
-
-        <div class="hint">
-          Tip: Nejlépe funguje, když kopíruješ přímo z Excelu (tabulátory). Pokud máš CSV s čárkami/ středníky, taky to vezmu.<br>
-          Čísla svaru můžeš mít např. <code>24-26</code> nebo <code>24,25,26</code> nebo <code>24; 25; 26</code>.
-        </div>
-      </section>
-
-      <aside class="card">
-        <h2>Souhrn</h2>
-        <div class="stats" id="stats">
-          <div class="statRow"><span>Řádků načteno</span><strong id="sRows">0</strong></div>
-          <div class="statRow"><span>Dní (unikátní datum)</span><strong id="sDays">0</strong></div>
-          <div class="statRow"><span>Řádků s chybou</span><strong id="sBad">0</strong></div>
-          <div class="statRow"><span>Řádků s varováním</span><strong id="sWarn">0</strong></div>
-          <div class="statRow"><span>OK řádků</span><strong id="sOk">0</strong></div>
-        </div>
-
-        <div class="hint">
-          Kontroluju hlavně:
-          <ul style="margin:8px 0 0 18px; color: var(--muted);">
-            <li>chybějící datum / čísla svaru</li>
-            <li>nesoulad <code>POCETSVARU</code> vs. spočítané kusy</li>
-            <li>nečitelný formát rozsahu</li>
-          </ul>
-        </div>
-      </aside>
-    </div>
-
-    <div class="tableWrap" style="margin-top:16px;">
-      <table>
-        <thead>
-          <tr>
-            <th>Datum</th>
-            <th>Size</th>
-            <th>Sarže</th>
-            <th>Vzorek</th>
-            <th>Čísla svaru</th>
-            <th>Počet svarů</th>
-            <th>IZO</th>
-            <th>Stav</th>
-            <th>Chyby / varování</th>
-          </tr>
-        </thead>
-        <tbody id="tbody">
-          <tr>
-            <td class="muted" colspan="9" style="padding:16px;">Vlož data a klikni na <strong>Načíst / Přepočítat</strong>.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="footer">
-      Lokálně v prohlížeči • žádná data nikam neodesílám • uložení tématu je v localStorage
-    </div>
-  </main>
-
   <script>
-    // ----------------------------
-    // Theme (dark/light)
-    // ----------------------------
-    const themeCheckbox = document.getElementById("themeCheckbox");
-    const themeLabel = document.getElementById("themeLabel");
+    // ------------------ Utils ------------------
+    function _trim(s){ return String(s ?? "").replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, ""); }
 
-    function applyTheme(theme){
-      document.body.setAttribute("data-theme", theme);
-      const isLight = theme === "light";
-      themeCheckbox.checked = isLight;
-      themeLabel.textContent = isLight ? "☀️ Light mode" : "🌙 Dark mode";
-      localStorage.setItem("theme", theme);
+    function _norm(s){
+      return _trim(s).toLowerCase()
+        .replace(/\s+/g, " ")
+        .replace(/[áàä]/g, "a")
+        .replace(/[éěèë]/g, "e")
+        .replace(/[íìï]/g, "i")
+        .replace(/[óòö]/g, "o")
+        .replace(/[úůùü]/g, "u")
+        .replace(/[ýÿ]/g, "y")
+        .replace(/[č]/g, "c")
+        .replace(/[ř]/g, "r")
+        .replace(/[š]/g, "s")
+        .replace(/[ž]/g, "z");
     }
 
-    const savedTheme = localStorage.getItem("theme") || "dark";
-    applyTheme(savedTheme);
+    function _normalizeDashes(s){ return String(s ?? "").replace(/[–—−]/g, "-"); }
 
-    themeCheckbox.addEventListener("change", () => {
-      applyTheme(themeCheckbox.checked ? "light" : "dark");
-    });
-
-    // ----------------------------
-    // Parsing helpers
-    // ----------------------------
-    function splitLines(text){
-      return text
-        .replace(/\r\n/g, "\n")
-        .replace(/\r/g, "\n")
-        .split("\n")
-        .map(l => l.trim())
-        .filter(l => l.length > 0);
+    function parseDateKey(raw){
+      // necháme jak je (Excel často DD.MM.YYYY)
+      return _trim(raw);
     }
 
-    function detectDelimiter(line){
-      // Prefer tabs (Excel paste), then semicolon, then comma
-      if (line.includes("\t")) return "\t";
-      if (line.includes(";")) return ";";
-      if (line.includes(",")) return ",";
-      // fallback: multiple spaces
+    // Jednoduchý CSV/TSV parser pro řádek (podporuje uvozovky)
+    function splitRow(line, delimiter){
+      const out = [];
+      let cur = "";
+      let inQ = false;
+      for (let i=0;i<line.length;i++){
+        const ch = line[i];
+        if (ch === '"'){
+          // "" -> "
+          if (inQ && line[i+1] === '"'){ cur += '"'; i++; }
+          else inQ = !inQ;
+        } else if (!inQ && ch === delimiter){
+          out.push(cur);
+          cur = "";
+        } else {
+          cur += ch;
+        }
+      }
+      out.push(cur);
+      return out;
+    }
+
+    function detectDelimiter(text){
+      // Priorita: tab (Excel copy), pak ; (CZ CSV), pak |, jinak null
+      const firstLine = text.replace(/\r/g,"").split("\n").find(l => _trim(l)!=="") || "";
+      if (firstLine.includes("\t")) return "\t";
+      if (firstLine.includes(";")) return ";";
+      if (firstLine.includes("|")) return "|";
       return null;
     }
 
-    function smartSplit(line, delim){
-      if (delim) return line.split(delim).map(s => s.trim());
-      // split by 2+ spaces if no delimiter
-      return line.split(/\s{2,}/).map(s => s.trim());
-    }
+    // Parse buňky CISLA SVARU:
+    // podporuje: 12, 2-11, 1,2, 39,40, 1,2,5-7
+    function parseWeldCellToNumbers(cellRaw){
+      let s = _trim(cellRaw ?? "");
+      s = _normalizeDashes(s);
+      if (!s) return { values: [], errors: [] };
 
-    function normalizeHeader(h){
-      return h
-        .toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove diacritics
-        .replace(/\s+/g, "")
-        .replace(/_/g,"");
-    }
+      // pryč mezery
+      s = s.replace(/\s+/g, "");
 
-    // Parse "CISLA SVARU" like:
-    // - "24-26" => 24,25,26
-    // - "24,25,26" or "24; 25; 26" or "24 25 26"
-    // - "24-26, 30, 33-34"
-    function parseWeldNumbers(text){
-      const raw = (text || "").trim();
-      if (!raw) return { numbers: [], problems: ["Chybí čísla svaru."] };
+      const parts = s.split(",");  // čárka = seznam položek/rozsahů
+      const values = [];
+      const errors = [];
 
-      // unify separators
-      const cleaned = raw
-        .replace(/–|—/g, "-")
-        .replace(/,/g, " ")
-        .replace(/;/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
+      for (const partRaw of parts){
+        const part = partRaw;
+        if (!part) continue;
 
-      const parts = cleaned.split(" ").filter(Boolean);
-      const nums = [];
-      const problems = [];
-
-      for (const p of parts){
-        if (/^\d+$/.test(p)){
-          nums.push(parseInt(p, 10));
-          continue;
-        }
-        if (/^\d+-\d+$/.test(p)){
-          const [a,b] = p.split("-").map(x => parseInt(x,10));
-          if (Number.isNaN(a) || Number.isNaN(b)){
-            problems.push(`Nečitelný rozsah: ${p}`);
+        const dash = part.indexOf("-");
+        if (dash !== -1){
+          const left = part.slice(0, dash);
+          const right = part.slice(dash + 1);
+          if (!left || !right){
+            errors.push(`Neplatný rozsah "${partRaw}"`);
             continue;
           }
-          if (b < a){
-            problems.push(`Rozsah je obráceně (b < a): ${p}`);
+          const a0 = Number(left);
+          const b0 = Number(right);
+          if (!Number.isFinite(a0) || !Number.isFinite(b0)){
+            errors.push(`Neplatné číslo v rozsahu "${partRaw}"`);
             continue;
           }
-          for (let x=a; x<=b; x++) nums.push(x);
-          continue;
+          let a = Math.trunc(a0), b = Math.trunc(b0);
+          if (a > b) [a,b] = [b,a];
+          if (b - a > 2_000_000){
+            errors.push(`Rozsah je příliš velký "${partRaw}"`);
+            continue;
+          }
+          for (let i=a;i<=b;i++) values.push(i);
+        } else {
+          const n0 = Number(part);
+          if (!Number.isFinite(n0)){
+            errors.push(`Neplatná hodnota "${partRaw}"`);
+            continue;
+          }
+          values.push(Math.trunc(n0));
         }
-        problems.push(`Neznámý formát: "${p}"`);
       }
 
-      // remove duplicates + sort
-      const uniq = Array.from(new Set(nums)).sort((a,b)=>a-b);
-      if (uniq.length === 0 && problems.length === 0){
-        problems.push("Čísla svaru se nepodařilo přečíst.");
-      }
-
-      return { numbers: uniq, problems };
+      return { values, errors };
     }
 
-    function toInt(val){
-      if (val === null || val === undefined) return null;
-      const s = String(val).trim().replace(",", ".");
-      if (!s) return null;
-      const n = Number(s);
-      return Number.isFinite(n) ? n : null;
-    }
+    function analyzeNumbers(values){
+      // ignorujeme <=0 a neint
+      const counts = new Map();
+      let min = null, max = null;
 
-    // ----------------------------
-    // Core parse + validate
-    // ----------------------------
-    const dataInput = document.getElementById("dataInput");
-    const parseBtn = document.getElementById("parseBtn");
-    const loadDemoBtn = document.getElementById("loadDemoBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const onlyErrorsCheckbox = document.getElementById("onlyErrorsCheckbox");
-    const tbody = document.getElementById("tbody");
-
-    const sRows = document.getElementById("sRows");
-    const sDays = document.getElementById("sDays");
-    const sBad = document.getElementById("sBad");
-    const sWarn = document.getElementById("sWarn");
-    const sOk = document.getElementById("sOk");
-
-    let lastRows = []; // parsed rows with validation
-
-    function render(){
-      const onlyErr = onlyErrorsCheckbox.checked;
-
-      const rows = onlyErr
-        ? lastRows.filter(r => r.status !== "OK")
-        : lastRows;
-
-      tbody.innerHTML = "";
-
-      if (rows.length === 0){
-        tbody.innerHTML = `
-          <tr>
-            <td class="muted" colspan="9" style="padding:16px;">
-              ${lastRows.length === 0 ? "Žádná data." : "Filtr nic nenašel (žádné chyby/varování)."}
-            </td>
-          </tr>`;
-        return;
+      for (const v of values){
+        if (!Number.isInteger(v) || v <= 0) continue;
+        counts.set(v, (counts.get(v) || 0) + 1);
+        if (min === null || v < min) min = v;
+        if (max === null || v > max) max = v;
       }
 
-      for (const r of rows){
-        const tr = document.createElement("tr");
-        if (r.status === "CHYBA") tr.classList.add("rowBad");
-        if (r.status === "VAROVÁNÍ") tr.classList.add("rowWarn");
-
-        const badgeClass = r.status === "OK" ? "good" : (r.status === "CHYBA" ? "bad" : "warn");
-        const errHtml = r.issues.length
-          ? `<ul>${r.issues.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>`
-          : `<span class="muted">—</span>`;
-
-        tr.innerHTML = `
-          <td class="mono">${escapeHtml(r.datum || "")}</td>
-          <td>${escapeHtml(r.size || "")}</td>
-          <td>${escapeHtml(r.sarze || "")}</td>
-          <td>${escapeHtml(r.vzorek || "")}</td>
-          <td class="mono">${escapeHtml(r.cislaSvaru || "")}</td>
-          <td class="mono">${escapeHtml(r.pocetSvaru || "")}</td>
-          <td>${escapeHtml(r.izo || "")}</td>
-          <td><span class="badge ${badgeClass}">${escapeHtml(r.status)}</span></td>
-          <td class="errors">${errHtml}</td>
-        `;
-        tbody.appendChild(tr);
+      const duplicates = [];
+      for (const [val, c] of counts.entries()){
+        if (c >= 2) duplicates.push([val, c]);
       }
-    }
+      duplicates.sort((a,b)=>a[0]-b[0]);
 
-    function updateStats(){
-      const total = lastRows.length;
-      const bad = lastRows.filter(r => r.status === "CHYBA").length;
-      const warn = lastRows.filter(r => r.status === "VAROVÁNÍ").length;
-      const ok = lastRows.filter(r => r.status === "OK").length;
-      const days = new Set(lastRows.map(r => r.datum).filter(Boolean)).size;
-
-      sRows.textContent = total;
-      sDays.textContent = days;
-      sBad.textContent = bad;
-      sWarn.textContent = warn;
-      sOk.textContent = ok;
-    }
-
-    function parseAll(){
-      const text = dataInput.value || "";
-      const lines = splitLines(text);
-
-      if (lines.length === 0){
-        lastRows = [];
-        updateStats();
-        render();
-        return;
+      const missing = [];
+      if (min !== null && max !== null){
+        for (let i=min;i<=max;i++){
+          if (!counts.has(i)) missing.push(i);
+        }
       }
 
-      // header
-      const headerLine = lines[0];
-      const delim = detectDelimiter(headerLine);
-      const headers = smartSplit(headerLine, delim).map(normalizeHeader);
+      return { min, max, uniqueCount: counts.size, totalCount: values.length, duplicates, missing };
+    }
 
-      // map expected fields (supports variations)
-      const idx = {
-        datum: headers.findIndex(h => h === "datum" || h === "date"),
-        size: headers.findIndex(h => h === "size"),
-        sarze: headers.findIndex(h => h === "sarze" || h === "sarze." || h === "sar"),
-        vzorek: headers.findIndex(h => h === "vzorek" || h === "sample"),
-        cislaSvaru: headers.findIndex(h => h === "cislasvaru" || h === "cislasvaru" || h === "weldnumbers" || h === "cislasvaru"),
-        pocetSvaru: headers.findIndex(h => h === "pocetsvaru" || h === "pocetsvaru" || h === "countwelds"),
-        izo: headers.findIndex(h => h === "izo"),
-      };
+    function formatAsRanges(nums){
+      if (!nums.length) return "";
+      const arr = [...nums].sort((a,b)=>a-b);
+      const parts = [];
+      let start = arr[0], prev = arr[0];
+      for (let i=1;i<arr.length;i++){
+        const x = arr[i];
+        if (x === prev + 1){
+          prev = x;
+        } else {
+          parts.push(start === prev ? `${start}` : `${start}-${prev}`);
+          start = prev = x;
+        }
+      }
+      parts.push(start === prev ? `${start}` : `${start}-${prev}`);
+      return parts.join(", ");
+    }
 
-      // If first line doesn't look like header (no known cols), treat as data with fixed order
-      const knownCount = Object.values(idx).filter(i => i >= 0).length;
-      const hasHeader = knownCount >= 2;
+    function dayHasProblem(day){
+      return day.duplicates.length > 0 || day.missing.length > 0;
+    }
 
-      const start = hasHeader ? 1 : 0;
+    // ------------------ Table parsing (header tolerant) ------------------
+    function parsePastedTable(text){
+      const cleaned = text.replace(/\r/g,"");
+      const lines = cleaned.split("\n").filter(l => _trim(l) !== "");
+      if (lines.length === 0) return { ok:false, error:"Prázdný vstup." };
+
+      const delim = detectDelimiter(cleaned);
+      if (!delim){
+        // fallback: zkus tab jako nejčastější
+        return { ok:false, error:"Nevidím oddělovač sloupců. Nejlépe vlož tabulku přímo z Excelu (tabulátory)." };
+      }
+
+      const first = splitRow(lines[0], delim);
+      const normHeader = first.map(_norm);
+
+      // Je první řádek hlavička?
+      const headerLooksLikeHeader =
+        normHeader.some(h => h === "datum") &&
+        normHeader.some(h => h.includes("cisla") && h.includes("svar"));
+
+      let dateIdx = -1;
+      let weldIdx = -1;
+      let startRow = 0;
+
+      if (headerLooksLikeHeader){
+        dateIdx = normHeader.findIndex(h => h === "datum" || h.startsWith("datum "));
+        weldIdx = normHeader.findIndex(h => h.includes("cisla") && h.includes("svar"));
+        startRow = 1;
+      } else {
+        // fallback bez hlavičky: předpoklad 1. sloupec datum
+        dateIdx = 0;
+        // a čísla sváru zkus 5. sloupec (index 4), jinak poslední
+        weldIdx = (first.length >= 5) ? 4 : Math.max(0, first.length - 1);
+        startRow = 0;
+      }
 
       const rows = [];
-      for (let i=start; i<lines.length; i++){
-        const cols = smartSplit(lines[i], delim);
-        const get = (key, fallbackIndex) => {
-          const j = hasHeader ? idx[key] : fallbackIndex;
-          if (j === null || j === undefined || j < 0) return "";
-          return (cols[j] ?? "").trim();
-        };
+      for (let i=startRow;i<lines.length;i++){
+        rows.push(splitRow(lines[i], delim));
+      }
 
-        const datum = get("datum", 0);
-        const size = get("size", 1);
-        const sarze = get("sarze", 2);
-        const vzorek = get("vzorek", 3);
-        const cislaSvaru = get("cislaSvaru", 4);
-        const pocetSvaru = get("pocetSvaru", 5);
-        const izo = get("izo", 6);
+      return { ok:true, delimiter: delim, hasHeader: headerLooksLikeHeader, dateIdx, weldIdx, rows };
+    }
 
-        const issues = [];
+    // ------------------ DOM refs ------------------
+    const excelInput = document.getElementById("excelInput");
+    const stats = document.getElementById("stats");
+    const resultEl = document.getElementById("result");
+    const onlyErrorsEl = document.getElementById("onlyErrors");
+    const shownInfo = document.getElementById("shownInfo");
 
-        if (!datum) issues.push("Chybí DATUM.");
-        if (!cislaSvaru) issues.push("Chybí CISLA SVARU.");
+    const sumRows = document.getElementById("sumRows");
+    const sumDays = document.getElementById("sumDays");
+    const sumBadDays = document.getElementById("sumBadDays");
+    const sumOkDays = document.getElementById("sumOkDays");
 
-        // parse weld numbers
-        const parsed = parseWeldNumbers(cislaSvaru);
-        for (const p of parsed.problems) issues.push(p);
+    let lastDays = []; // cache výsledků pro filtr
 
-        // compare count
-        const expectedCount = parsed.numbers.length;
-        const countVal = toInt(pocetSvaru);
+    function refreshStats(){
+      const parsed = parsePastedTable(excelInput.value);
+      if (!parsed.ok){
+        stats.textContent = "";
+        return;
+      }
+      const headerMsg = parsed.hasHeader ? "hlavička: ano" : "hlavička: ne (fallback)";
+      stats.textContent = `Detekováno řádků: ${parsed.rows.length} • ${headerMsg} • sloupec datum: #${parsed.dateIdx+1} • čísla sváru: #${parsed.weldIdx+1}`;
+    }
 
-        if (pocetSvaru && (countVal === null || !Number.isInteger(countVal))){
-          issues.push(`POCETSVARU není celé číslo: "${pocetSvaru}"`);
+    function setSummary(rowsCount, daysCount, badDaysCount){
+      sumRows.textContent = String(rowsCount);
+      sumDays.textContent = String(daysCount);
+      sumBadDays.textContent = String(badDaysCount);
+      sumOkDays.textContent = String(Math.max(0, daysCount - badDaysCount));
+    }
+
+    function renderDays(){
+      resultEl.innerHTML = "";
+
+      if (!lastDays.length){
+        resultEl.innerHTML = `<div class="muted">Zatím nic.</div>`;
+        shownInfo.textContent = "Zatím nic.";
+        setSummary(0,0,0);
+        return;
+      }
+
+      const onlyErr = !!onlyErrorsEl.checked;
+      const visible = onlyErr ? lastDays.filter(dayHasProblem) : lastDays;
+
+      const badCount = lastDays.filter(dayHasProblem).length;
+      shownInfo.textContent = onlyErr
+        ? `Zobrazeno: jen dny s chybami • ${visible.length}/${lastDays.length} dnů`
+        : `Zobrazeno: vše • ${visible.length} dnů`;
+
+      // Souhrn (řádky si držíme bokem v lastDaysMeta)
+      const rowsCount = lastDays.__rowsCount ?? 0;
+      setSummary(rowsCount, lastDays.length, badCount);
+
+      for (const day of visible){
+        const details = document.createElement("details");
+        details.className = "day";
+
+        const summary = document.createElement("summary");
+
+        const left = document.createElement("div");
+        left.className = "sumLeft";
+        left.textContent = day.date;
+
+        const right = document.createElement("div");
+        right.className = "sumRight";
+
+        const tagStatus = document.createElement("span");
+        tagStatus.className = "tag " + (dayHasProblem(day) ? "bad" : "good");
+        tagStatus.textContent = dayHasProblem(day) ? "PROBLÉM" : "OK";
+        right.appendChild(tagStatus);
+
+        const tagDup = document.createElement("span");
+        tagDup.className = "tag";
+        tagDup.textContent = `Duplicity: ${day.duplicates.length}`;
+        right.appendChild(tagDup);
+
+        const tagMiss = document.createElement("span");
+        tagMiss.className = "tag";
+        tagMiss.textContent = (day.max === null) ? "Chybí: -" : `Chybí: ${day.missing.length}`;
+        right.appendChild(tagMiss);
+
+        summary.appendChild(left);
+        summary.appendChild(right);
+
+        const inside = document.createElement("div");
+        inside.className = "inside";
+
+        const kv = document.createElement("div");
+        kv.className = "kv";
+        kv.innerHTML = `
+          <div class="k">Rozbalených čísel</div><div>${day.totalExpanded}</div>
+          <div class="k">Unikátních čísel</div><div>${day.uniqueCount}</div>
+          <div class="k">Rozsah dne (min..max)</div><div>${day.min ?? "-"} .. ${day.max ?? "-"}</div>
+        `;
+        inside.appendChild(kv);
+
+        const dupTitle = document.createElement("div");
+        dupTitle.className = "blockTitle";
+        dupTitle.textContent = "Duplicity";
+        inside.appendChild(dupTitle);
+
+        const dupBox = document.createElement("div");
+        dupBox.className = "mono";
+        dupBox.textContent = day.duplicates.length
+          ? day.duplicates.map(([v,c]) => `${v} × ${c}`).join("\n")
+          : "Žádné ✅";
+        inside.appendChild(dupBox);
+
+        const missTitle = document.createElement("div");
+        missTitle.className = "blockTitle";
+        missTitle.textContent = "Chybějící v min..max";
+        inside.appendChild(missTitle);
+
+        const missBox = document.createElement("div");
+        missBox.className = "mono";
+        if (day.max === null){
+          missBox.textContent = "Žádná čísla v tomto dni.";
+        } else if (!day.missing.length){
+          missBox.textContent = `Žádné ✅ (v rozsahu ${day.min}..${day.max})`;
+        } else {
+          missBox.textContent = formatAsRanges(day.missing);
         }
-        if (countVal !== null && expectedCount > 0 && countVal !== expectedCount){
-          issues.push(`Nesedí počet: POCETSVARU=${countVal}, ale z CISLA SVARU vychází ${expectedCount}.`);
+        inside.appendChild(missBox);
+
+        // Volitelné: chyby parsování (jen když je CISLA SVARU nečitelný)
+        if (day.parseErrors.length){
+          const errTitle = document.createElement("div");
+          errTitle.className = "blockTitle";
+          errTitle.textContent = "Poznámky (nepodařilo se přečíst některé hodnoty)";
+          inside.appendChild(errTitle);
+
+          const errBox = document.createElement("div");
+          errBox.className = "mono";
+          errBox.textContent = day.parseErrors.slice(0, 30).join("\n") + (day.parseErrors.length > 30 ? `\n... +${day.parseErrors.length - 30} dalších` : "");
+          inside.appendChild(errBox);
         }
 
-        // classify
-        let status = "OK";
-        const hasHardError =
-          issues.some(x => x.startsWith("Chybí")) ||
-          issues.some(x => x.includes("nepodařilo")) ||
-          issues.some(x => x.includes("Neznámý formát")) ||
-          issues.some(x => x.includes("Nesedí počet")) ||
-          issues.some(x => x.includes("obráceně"));
+        details.appendChild(summary);
+        details.appendChild(inside);
+        resultEl.appendChild(details);
+      }
 
-        const hasSoftWarn =
-          !hasHardError && issues.length > 0;
+      if (!visible.length){
+        resultEl.innerHTML = `<div class="muted">Filtr je zapnutý, ale žádné dny nemají chybu ✅</div>`;
+      }
+    }
 
-        if (hasHardError) status = "CHYBA";
-        else if (hasSoftWarn) status = "VAROVÁNÍ";
+    function process(){
+      const parsed = parsePastedTable(excelInput.value);
+      if (!parsed.ok){
+        lastDays = [];
+        resultEl.innerHTML = `<div class="mono">${parsed.error}</div>`;
+        shownInfo.textContent = parsed.error;
+        setSummary(0,0,0);
+        return;
+      }
 
-        rows.push({
-          datum, size, sarze, vzorek, cislaSvaru, pocetSvaru, izo,
-          status,
-          issues
+      const { dateIdx, weldIdx, rows } = parsed;
+
+      // group per day
+      const map = new Map(); // date -> { values[], parseErrors[] }
+      let seenRows = 0;
+
+      for (let r=0;r<rows.length;r++){
+        const cols = rows[r];
+        const date = parseDateKey(cols[dateIdx] ?? "");
+        const weldCell = cols[weldIdx] ?? "";
+
+        // ignoruj řádky bez data (jen tady nic víc nekontrolujeme)
+        if (!date) continue;
+
+        seenRows++;
+
+        const p = parseWeldCellToNumbers(weldCell);
+        if (!map.has(date)) map.set(date, { values: [], parseErrors: [] });
+
+        const ref = map.get(date);
+        for (const v of p.values) ref.values.push(v);
+
+        if (p.errors.length){
+          // řádkování: r + 1 (+ případná hlavička už neřešíme), stačí info
+          ref.parseErrors.push(`Řádek ${r + 1}: "${weldCell}" → ${p.errors.join("; ")}`);
+        }
+      }
+
+      // Převod do listu a seřazení dle data (pokud to vypadá jako DD.MM.YYYY)
+      const datesSorted = [...map.keys()].sort((a,b)=>{
+        const pa = a.split(".").map(x=>parseInt(x,10));
+        const pb = b.split(".").map(x=>parseInt(x,10));
+        if (pa.length === 3 && pb.length === 3 && pa.every(Number.isFinite) && pb.every(Number.isFinite)){
+          const da = new Date(pa[2], pa[1]-1, pa[0]).getTime();
+          const db = new Date(pb[2], pb[1]-1, pb[0]).getTime();
+          return da - db;
+        }
+        return a.localeCompare(b, "cs");
+      });
+
+      const days = [];
+      for (const date of datesSorted){
+        const bucket = map.get(date);
+        const a = analyzeNumbers(bucket.values);
+
+        days.push({
+          date,
+          totalExpanded: bucket.values.length,
+          uniqueCount: a.uniqueCount,
+          min: a.min,
+          max: a.max,
+          duplicates: a.duplicates,
+          missing: a.missing,
+          parseErrors: bucket.parseErrors
         });
       }
 
-      lastRows = rows;
-      updateStats();
-      render();
+      // ulož pro filtr a rendering
+      days.__rowsCount = seenRows;
+      lastDays = days;
+
+      renderDays();
     }
 
-    function escapeHtml(s){
-      return String(s)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+    // ------------------ Demo data ------------------
+    function loadDemo(){
+      excelInput.value =
+`DATUM\tCISLA SVARU
+04.09.2025\t1
+04.09.2025\t2-5
+04.09.2025\t4
+08.09.2025\t1-3
+08.09.2025\t5
+08.09.2025\t6-8
+09.09.2025\t10,12,13-15
+09.09.2025\t11
+09.09.2025\t14`;
+      refreshStats();
+      process();
     }
 
-    // ----------------------------
-    // UI events
-    // ----------------------------
-    parseBtn.addEventListener("click", parseAll);
-    onlyErrorsCheckbox.addEventListener("change", render);
+    // ------------------ Dark mode (persist) ------------------
+    const themeCheckbox = document.getElementById("themeCheckbox");
+    const themeLabel = document.getElementById("themeLabel");
 
-    clearBtn.addEventListener("click", () => {
-      dataInput.value = "";
-      lastRows = [];
-      updateStats();
-      render();
+    function applyTheme(isDark){
+      document.body.classList.toggle("dark", isDark);
+      themeCheckbox.checked = isDark;
+      themeLabel.textContent = "Dark mode";
+      localStorage.setItem("weld_theme_dark", isDark ? "1" : "0");
+    }
+
+    const saved = localStorage.getItem("weld_theme_dark");
+    applyTheme(saved === "1");
+
+    document.getElementById("themeToggle").addEventListener("click", (e)=>{
+      // klik na label přepne checkbox, ale my chceme mít jistotu
+      const next = !document.body.classList.contains("dark");
+      applyTheme(next);
+      e.preventDefault();
     });
 
-    loadDemoBtn.addEventListener("click", () => {
-      dataInput.value =
-`DATUM\tSIZE\tSARZE\tVZOREK\tCISLA SVARU\tPOCETSVARU\tIZO
-23.07.2025\t1,5\t41164\t4\t24-26\t3\tG-B432:FA100 RL504 B3
-23.07.2025\t3\t41164\t4\t10-12\t2\tG-B432:FA100 RL504 B3
-24.07.2025\t2\t\t4\t30,31,32\t3\tG-B999:FA200 RL111 A1
-\t2\t50000\t1\t40-42\t3\tG-X111:FA300 RL222 C2
-25.07.2025\t1\t50001\t2\t60-58\t3\tG-X222:FA300 RL222 C2`;
-      parseAll();
+    // ------------------ Events ------------------
+    document.getElementById("processBtn").addEventListener("click", process);
+    document.getElementById("demoBtn").addEventListener("click", loadDemo);
+
+    document.getElementById("clearBtn").addEventListener("click", ()=>{
+      excelInput.value = "";
+      lastDays = [];
+      stats.textContent = "";
+      renderDays();
     });
 
-    // Auto parse on paste (nice UX)
-    dataInput.addEventListener("paste", () => {
-      setTimeout(parseAll, 0);
-    });
+    excelInput.addEventListener("input", refreshStats);
+    excelInput.addEventListener("paste", ()=> setTimeout(refreshStats, 0));
 
-    // initial render
-    updateStats();
-    render();
+    onlyErrorsEl.addEventListener("change", renderDays);
+
+    // init empty
+    renderDays();
   </script>
 </body>
 </html>
