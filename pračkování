@@ -3,9 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Kontrola čísel svárů</title>
+  div class="headerBar">
+  <h1>Kontrola čísel svárů podle data</h1>
+
+  <label class="themeToggle" id="themeToggle" title="Přepnout světlý / tmavý režim">
+    <input type="checkbox" id="themeCheckbox" />
+    <span class="switch"><span class="knob"></span></span>
+    <span class="themeLabel" id="themeLabel">Dark mode</span>
+  </label>
+</div>
 
   <style>
+.headerBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.headerBar h1 {
+  margin: 0;
+}
+
     /* =========================
        Theme (CSS variables)
        ========================= */
@@ -298,13 +318,6 @@
             Jen dny s chybami
           </label>
         </div>
-
-        <!-- Theme toggle -->
-        <label class="themeToggle" id="themeToggle" title="Přepnout světlý / tmavý režim">
-          <input type="checkbox" id="themeCheckbox" />
-          <span class="switch" aria-hidden="true"><span class="knob"></span></span>
-          <span class="themeLabel" id="themeLabel">Dark mode</span>
-        </label>
       </div>
     </div>
 
