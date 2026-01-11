@@ -94,11 +94,12 @@
 </head>
 
 <body>
-  <h1>Po tomhle si dej čáru (ideálně dvě)</h1>
+  <h1>Kontrola čísel svárů podle data</h1>
 
   <div class="card">
     <h3>Vstup z Excelu</h3>
     <p class="muted small">
+      V Excelu označ tabulku <b>včetně hlavičky</b> (řádek s názvy sloupců) → Ctrl+C → sem Ctrl+V → Zpracovat.
       Aplikace hledá v hlavičce sloupce <code>DATUM</code> a <code>ČÍSLA SVAR…</code>.
       Ve sloupci čísel svaru může být např. <code>12</code>, <code>2-11</code>, <code>1,2</code>, <code>39,40</code>, nebo kombinace <code>1,2,5-7</code>.
     </p>
@@ -115,7 +116,8 @@
       <summary class="muted" style="cursor:pointer;">Tipy (když to nic nenajde)</summary>
       <ul class="muted small">
         <li>Musí být vložená tabulka <b>včetně prvního řádku s hlavičkami</b>.</li>
-        <li>Sloupce musí obsahovat něco jako <b>DATUM</b> a <b>ČÍSLA SVAR…</b>.</li>
+        <li>Sloupce musí obsahovat něco jako <b>DATUM</b> a <b>ČÍSLA SVAR…</b> (diakritika nevadí).</li>
+        <li>Excel kopíruje tabulku jako TSV (sloupce oddělené tabulátorem). To je v pořádku.</li>
       </ul>
     </details>
   </div>
@@ -162,7 +164,6 @@
       if (!s) return { ok: true, values: [], errors: [] };
 
       s = s.replace(/\s+/g, "");
-
       const parts = s.split(",");
       const values = [];
       const errors = [];
@@ -283,14 +284,24 @@
       const byDate = new Map();
       const errors = [];
 
+      // ✅ FIX: řádky bez data ber jako "stejné datum jako řádek nad tím"
+      let lastDate = "";
+
       for (let r = 0; r < rows.length; r++) {
         const cols = rows[r];
-        const date = parseDateKey(cols[dateIdx] ?? "");
+
+        const rawDate = parseDateKey(cols[dateIdx] ?? "");
+        const date = rawDate || lastDate;
+
+        if (!date) continue;      // na začátku může být prázdno
+        if (rawDate) lastDate = rawDate;
+
         const weldCell = cols[weldIdx] ?? "";
-        if (!date) continue;
 
         const p = parseWeldCellToNumbers(weldCell);
-        if (p.errors.length) errors.push(`Řádek ${r + 2} (${date}): ${p.errors.join("; ")} | hodnota: "${weldCell}"`);
+        if (p.errors.length) {
+          errors.push(`Řádek ${r + 2} (${date}): ${p.errors.join("; ")} | hodnota: "${weldCell}"`);
+        }
 
         if (!byDate.has(date)) byDate.set(date, []);
         const arr = byDate.get(date);
@@ -311,7 +322,7 @@
         return new Date(pa[2], pa[1]-1, pa[0]) - new Date(pb[2], pb[1]-1, pb[0]);
       });
 
-      // Vykreslení UI
+      // render
       result.innerHTML = "";
 
       const top = document.createElement("div");
@@ -391,7 +402,9 @@
 
         const box = document.createElement("div");
         box.className = "mono";
-        box.textContent = errors.slice(0, 30).join("\n") + (errors.length > 30 ? `\n... +${errors.length - 30} dalších` : "");
+        box.textContent =
+          errors.slice(0, 30).join("\n") +
+          (errors.length > 30 ? `\n... +${errors.length - 30} dalších` : "");
 
         inside.appendChild(box);
         warn.appendChild(sum);
