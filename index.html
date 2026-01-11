@@ -43,7 +43,8 @@
     html, body { height: 100%; }
     body{
       margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial,
+                   "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
       background: radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.18), transparent 60%),
                   radial-gradient(900px 500px at 90% 0%, rgba(16,185,129,.14), transparent 55%),
                   var(--bg);
@@ -172,9 +173,7 @@
       letter-spacing: .2px;
     }
 
-    .resultCard{
-      margin-top: 14px;
-    }
+    .resultCard{ margin-top: 14px; }
 
     .resultTop{
       display:flex;
@@ -286,6 +285,12 @@
     body.dark .knob{ left: 21px; }
     body.dark .switch{ background: rgba(37,99,235,.22); border-color: rgba(37,99,235,.35); }
 
+    .themeLabel{
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial,
+                   "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+      letter-spacing: .1px;
+    }
+
     code{
       padding: 2px 6px;
       border-radius: 8px;
@@ -303,7 +308,7 @@
       <div>
         <h1>Kontrola čísel svárů podle data</h1>
         <div class="muted small" style="margin-top:6px;">
-          Kontroluje se <b>jen</b>: <b>duplicity</b> a <b>chybějící čísla v rozsahu min..max</b> pro každý den.
+          Kontroluje se: <b>duplicity</b> a <b>chybějící čísla v rozsahu min..max</b> pro každý den.
         </div>
       </div>
 
@@ -311,7 +316,7 @@
       <label class="themeToggle" id="themeToggle" title="Přepnout světlý / tmavý režim">
         <input type="checkbox" id="themeCheckbox" />
         <span class="switch" aria-hidden="true"><span class="knob"></span></span>
-        <span class="themeLabel" id="themeLabel">🌓Dark mode</span>
+        <span class="themeLabel" id="themeLabel">🌓 Režim</span>
       </label>
     </div>
 
@@ -319,24 +324,24 @@
       <div class="card">
         <h3 style="margin:0 0 8px;">Vstupní data</h3>
         <div class="muted small" style="margin-bottom:10px;">
-          označ v Excelu tabulku <b>včetně hlavičky</b> (musí obsahovat <code>DATUM</code> a <code>CISLA SVARU</code>)
-          → Ctrl+C → sem Ctrl+V → <b>Prošňupej</b>.<br/>
+          Nejlépe funguje vložení přímo z Excelu (tabulátory). Ideálně včetně hlavičky se sloupci
+          <code>DATUM</code> a <code>CISLA SVARU</code>.
         </div>
 
         <textarea id="excelInput" placeholder="Sem vlož tabulku z Excelu..."></textarea>
 
         <div class="row">
-          <button id="processBtn">Prošňupej</button>
+          <button id="processBtn">Zpracovat</button>
           <button id="clearBtn">Vymazat</button>
-
+          <button id="demoBtn" title="Vloží ukázková data">Demo data</button>
           <div class="muted" id="stats"></div>
         </div>
 
         <details style="margin-top:10px;">
           <summary class="muted" style="cursor:pointer;">Tip</summary>
-          <div style="margin-top:8px; font-size:13px;">
-          Mrdej na to a dej si pivson
-  </div>
+          <div style="margin-top:8px; font-size:13px;" class="muted">
+            dej si pivsona a jdi točit maty
+          </div>
         </details>
       </div>
 
@@ -362,7 +367,7 @@
       <div class="resultTop">
         <div>
           <h3 style="margin:0;">Výsledek</h3>
-          <div class="muted small" id="shownInfo">Moc chlastáš, málo koíruješ.</div>
+          <div class="muted small" id="shownInfo">Zatím nic.</div>
         </div>
 
         <div class="pill">
@@ -374,7 +379,7 @@
       </div>
 
       <div id="result" class="resultWrap">
-        <div class="muted">Zatím nic.</div>
+        <div class="muted">moc chlastáš a málo kopíruješ.</div>
       </div>
     </div>
   </div>
@@ -399,11 +404,7 @@
     }
 
     function _normalizeDashes(s){ return String(s ?? "").replace(/[–—−]/g, "-"); }
-
-    function parseDateKey(raw){
-      // necháme jak je (Excel často DD.MM.YYYY)
-      return _trim(raw);
-    }
+    function parseDateKey(raw){ return _trim(raw); }
 
     // Jednoduchý CSV/TSV parser pro řádek (podporuje uvozovky)
     function splitRow(line, delimiter){
@@ -413,7 +414,6 @@
       for (let i=0;i<line.length;i++){
         const ch = line[i];
         if (ch === '"'){
-          // "" -> "
           if (inQ && line[i+1] === '"'){ cur += '"'; i++; }
           else inQ = !inQ;
         } else if (!inQ && ch === delimiter){
@@ -428,7 +428,6 @@
     }
 
     function detectDelimiter(text){
-      // Priorita: tab (Excel copy), pak ; (CZ CSV), pak |, jinak null
       const firstLine = text.replace(/\r/g,"").split("\n").find(l => _trim(l)!=="") || "";
       if (firstLine.includes("\t")) return "\t";
       if (firstLine.includes(";")) return ";";
@@ -443,10 +442,8 @@
       s = _normalizeDashes(s);
       if (!s) return { values: [], errors: [] };
 
-      // pryč mezery
       s = s.replace(/\s+/g, "");
-
-      const parts = s.split(",");  // čárka = seznam položek/rozsahů
+      const parts = s.split(",");
       const values = [];
       const errors = [];
 
@@ -489,7 +486,6 @@
     }
 
     function analyzeNumbers(values){
-      // ignorujeme <=0 a neint
       const counts = new Map();
       let min = null, max = null;
 
@@ -513,7 +509,7 @@
         }
       }
 
-      return { min, max, uniqueCount: counts.size, totalCount: values.length, duplicates, missing };
+      return { min, max, uniqueCount: counts.size, duplicates, missing };
     }
 
     function formatAsRanges(nums){
@@ -546,14 +542,12 @@
 
       const delim = detectDelimiter(cleaned);
       if (!delim){
-        // fallback: zkus tab jako nejčastější
         return { ok:false, error:"Nevidím oddělovač sloupců. Nejlépe vlož tabulku přímo z Excelu (tabulátory)." };
       }
 
       const first = splitRow(lines[0], delim);
       const normHeader = first.map(_norm);
 
-      // Je první řádek hlavička?
       const headerLooksLikeHeader =
         normHeader.some(h => h === "datum") &&
         normHeader.some(h => h.includes("cisla") && h.includes("svar"));
@@ -567,9 +561,7 @@
         weldIdx = normHeader.findIndex(h => h.includes("cisla") && h.includes("svar"));
         startRow = 1;
       } else {
-        // fallback bez hlavičky: předpoklad 1. sloupec datum
         dateIdx = 0;
-        // a čísla sváru zkus 5. sloupec (index 4), jinak poslední
         weldIdx = (first.length >= 5) ? 4 : Math.max(0, first.length - 1);
         startRow = 0;
       }
@@ -631,7 +623,6 @@
         ? `Zobrazeno: jen dny s chybami • ${visible.length}/${lastDays.length} dnů`
         : `Zobrazeno: vše • ${visible.length} dnů`;
 
-      // Souhrn (řádky si držíme bokem v lastDaysMeta)
       const rowsCount = lastDays.__rowsCount ?? 0;
       setSummary(rowsCount, lastDays.length, badCount);
 
@@ -706,11 +697,10 @@
         }
         inside.appendChild(missBox);
 
-        // Volitelné: chyby parsování (jen když je CISLA SVARU nečitelný)
         if (day.parseErrors.length){
           const errTitle = document.createElement("div");
           errTitle.className = "blockTitle";
-          errTitle.textContent = "Poznámky (nepodařilo se přečíst některé hodnoty)";
+          errTitle.textContent = "Poznámky (některé hodnoty nešly přečíst)";
           inside.appendChild(errTitle);
 
           const errBox = document.createElement("div");
@@ -741,7 +731,6 @@
 
       const { dateIdx, weldIdx, rows } = parsed;
 
-      // group per day
       const map = new Map(); // date -> { values[], parseErrors[] }
       let seenRows = 0;
 
@@ -750,24 +739,21 @@
         const date = parseDateKey(cols[dateIdx] ?? "");
         const weldCell = cols[weldIdx] ?? "";
 
-        // ignoruj řádky bez data (jen tady nic víc nekontrolujeme)
         if (!date) continue;
-
         seenRows++;
 
         const p = parseWeldCellToNumbers(weldCell);
+
         if (!map.has(date)) map.set(date, { values: [], parseErrors: [] });
 
         const ref = map.get(date);
         for (const v of p.values) ref.values.push(v);
 
         if (p.errors.length){
-          // řádkování: r + 1 (+ případná hlavička už neřešíme), stačí info
           ref.parseErrors.push(`Řádek ${r + 1}: "${weldCell}" → ${p.errors.join("; ")}`);
         }
       }
 
-      // Převod do listu a seřazení dle data (pokud to vypadá jako DD.MM.YYYY)
       const datesSorted = [...map.keys()].sort((a,b)=>{
         const pa = a.split(".").map(x=>parseInt(x,10));
         const pb = b.split(".").map(x=>parseInt(x,10));
@@ -796,7 +782,6 @@
         });
       }
 
-      // ulož pro filtr a rendering
       days.__rowsCount = seenRows;
       lastDays = days;
 
@@ -827,7 +812,10 @@
     function applyTheme(isDark){
       document.body.classList.toggle("dark", isDark);
       themeCheckbox.checked = isDark;
-      themeLabel.textContent = "Dark mode";
+
+      // TADY je důležité: už to nepřepisuje emoji pryč
+      themeLabel.textContent = isDark ? "🌙 Dark mode" : "☀️ Light mode";
+
       localStorage.setItem("weld_theme_dark", isDark ? "1" : "0");
     }
 
@@ -835,7 +823,6 @@
     applyTheme(saved === "1");
 
     document.getElementById("themeToggle").addEventListener("click", (e)=>{
-      // klik na label přepne checkbox, ale my chceme mít jistotu
       const next = !document.body.classList.contains("dark");
       applyTheme(next);
       e.preventDefault();
@@ -850,6 +837,7 @@
       lastDays = [];
       stats.textContent = "";
       renderDays();
+      setSummary(0,0,0);
     });
 
     excelInput.addEventListener("input", refreshStats);
