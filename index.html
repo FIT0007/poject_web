@@ -45,11 +45,68 @@
     .small { font-size: 13px; }
     code { background: #f3f3f3; padding: 2px 6px; border-radius: 6px; }
     ul { margin-top: 8px; }
+
+    .resultWrap { display: grid; gap: 10px; }
+
+.day {
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.92);
+  overflow: hidden;
+}
+
+.day summary {
+  cursor: pointer;
+  padding: 12px 14px;
+  font-weight: 700;
+  user-select: none;
+}
+
+.day summary:hover { background: rgba(0,0,0,0.04); }
+
+.day .inside {
+  padding: 12px 14px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 6px 12px;
+  margin: 0 0 10px 0;
+  font-size: 13px;
+}
+
+.kv div { padding: 2px 0; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid rgba(0,0,0,0.15);
+  background: rgba(0,0,0,0.03);
+  margin-left: 8px;
+}
+
+.blockTitle { margin: 10px 0 6px; font-weight: 700; }
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: rgba(0,0,0,0.03);
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 10px;
+  padding: 10px;
+}
+
   </style>
 </head>
 
 <body>
-  <h1>Po tomhle si dej čáru, ideálně dvě</h1>
+  <h1>Po tomhle si dej čáru (ideálně dvě)</h1>
 
   <div class="card">
     <h3>Vstup z Excelu</h3>
@@ -71,15 +128,17 @@
       <ul class="muted small">
         <li>Musí být vložená tabulka <b>včetně prvního řádku s hlavičkami</b>.</li>
         <li>Názvy sloupců: <b>DATUM</b> a <b>CISLA SVARU</b> (diakritika nevadí).</li>
-        <li>Excel kopíruje tabulku jako TSV (sloupce oddělené tabulátorem). To je v pořádku.</li>
       </ul>
     </details>
   </div>
 
-  <div class="card">
-    <h3>Výsledek</h3>
-    <pre id="result">Zatím nic.</pre>
+<div class="card">
+  <h3>Výsledek</h3>
+  <div id="result" class="resultWrap">
+    <div class="muted">Zatím nic.</div>
   </div>
+</div>
+
 
   <script>
     function _trim(s) {
@@ -107,21 +166,16 @@
     }
 
     function parseDateKey(raw) {
-      // očekáváme formát jako 04.09.2025 (z Excelu jako text)
       return _trim(raw);
     }
-
-    // Parse "CISLA SVARU" cell:
-    // supports: "12", "2-11", "1,2", "39,40", "12-18", "1,2,5-7"
+    
     function parseWeldCellToNumbers(cellRaw) {
       let s = _trim(cellRaw ?? "");
       s = _normalizeDashes(s);
       if (!s) return { ok: true, values: [] };
 
-      // odstraníme mezery
       s = s.replace(/\s+/g, "");
 
-      // Rozdělíme podle čárky (seznam položek / rozsahů)
       const parts = s.split(",");
       const values = [];
       const errors = [];
@@ -251,7 +305,7 @@
     document.getElementById("processBtn").addEventListener("click", () => {
       const parsed = parsePastedTable(excelInput.value);
       if (!parsed.ok) {
-        result.textContent = parsed.error;
+        result.innerHTML = `<div class="mono">${parsed.error}</div>`;
         return;
       }
 
@@ -281,7 +335,7 @@
       }
 
       if (byDate.size === 0) {
-        result.textContent = "Nenašel jsem žádná data (zkontroluj, že jsi vložil tabulku včetně hlavičky).";
+         result.innerHTML = `<div class="mono">Nenašel jsem žádná data (zkontroluj, že jsi vložil tabulku včetně hlavičky).</div>`;
         return;
       }
 
@@ -339,13 +393,115 @@
         if (errors.length > 15) out.push(`- ... +${errors.length - 15} dalších`);
       }
 
-      result.textContent = out.join("\n");
+      result.innerHTML = ""; // smaž starý výstup
+
+// malý header nahoře
+const top = document.createElement("div");
+top.className = "muted small";
+top.textContent = `Zpracováno dat: ${byDate.size} • Režim chybějících: ${missingMode}`;
+result.appendChild(top);
+
+for (const date of datesSorted) {
+  const values = byDate.get(date);
+  const { min, max, uniqueCount, duplicates, missing } = analyzeNumbers(values, missingMode);
+
+  const details = document.createElement("details");
+  details.className = "day";
+
+  // summary text + badge
+  const summary = document.createElement("summary");
+
+  const dupBadge = duplicates.length ? `Duplicity: ${duplicates.length}` : "Duplicity: 0";
+  const missBadge = (max === null) ? "Chybí: -" : `Chybí: ${missing.length}`;
+
+  summary.textContent = date;
+
+  const b1 = document.createElement("span");
+  b1.className = "badge";
+  b1.textContent = dupBadge;
+
+  const b2 = document.createElement("span");
+  b2.className = "badge";
+  b2.textContent = missBadge;
+
+  summary.appendChild(b1);
+  summary.appendChild(b2);
+
+  // inside content
+  const inside = document.createElement("div");
+  inside.className = "inside";
+
+  // kv stats
+  const kv = document.createElement("div");
+  kv.className = "kv";
+  kv.innerHTML = `
+    <div class="muted">Záznamů po rozbalení</div><div>${values.length}</div>
+    <div class="muted">Unikátních čísel</div><div>${uniqueCount}</div>
+    <div class="muted">Min..Max ve vstupu</div><div>${min ?? "-"} .. ${max ?? "-"}</div>
+  `;
+  inside.appendChild(kv);
+
+  // duplicates block
+  const dupTitle = document.createElement("div");
+  dupTitle.className = "blockTitle";
+  dupTitle.textContent = "Duplicity";
+  inside.appendChild(dupTitle);
+
+  const dupBox = document.createElement("div");
+  dupBox.className = "mono";
+
+  if (!duplicates.length) {
+    dupBox.textContent = "Žádné ✅";
+  } else {
+    dupBox.textContent = duplicates.map(([v, c]) => `${v} × ${c}`).join("\n");
+  }
+  inside.appendChild(dupBox);
+
+  // missing block
+  const missTitle = document.createElement("div");
+  missTitle.className = "blockTitle";
+  missTitle.textContent = "Chybějící";
+  inside.appendChild(missTitle);
+
+  const missBox = document.createElement("div");
+  missBox.className = "mono";
+
+  if (max === null) {
+    missBox.textContent = "Žádná čísla";
+  } else if (!missing.length) {
+    missBox.textContent = `Žádné ✅ (v rozsahu ${missingMode === "min..max" ? `${min}..${max}` : `1..${max}`})`;
+  } else {
+    missBox.textContent = formatAsRanges(missing);
+  }
+  inside.appendChild(missBox);
+
+  details.appendChild(summary);
+  details.appendChild(inside);
+
+  result.appendChild(details);
+}
+
+// chyby až dolů
+if (errors.length) {
+  const warn = document.createElement("details");
+  warn.className = "day";
+  const sum = document.createElement("summary");
+  sum.textContent = `Varování / chyby (${errors.length})`;
+  const inside = document.createElement("div");
+  inside.className = "inside";
+  const box = document.createElement("div");
+  box.className = "mono";
+  box.textContent = errors.slice(0, 30).join("\n") + (errors.length > 30 ? `\n... +${errors.length - 30} dalších` : "");
+  inside.appendChild(box);
+  warn.appendChild(sum);
+  warn.appendChild(inside);
+  result.appendChild(warn);
     });
 
     document.getElementById("clearBtn").addEventListener("click", () => {
       excelInput.value = "";
       stats.textContent = "";
-      result.textContent = "Zatím nic.";
+      result.innerHTML = `<div class="muted">Zatím nic.</div>`;
     });
 
     excelInput.addEventListener("input", refreshStats);
