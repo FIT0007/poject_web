@@ -4,11 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Kontrola čísel svárů</title>
+
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 32px; max-width: 1200px; }
     h1 { margin-bottom: 8px; }
     .muted { color: #555; }
     .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin-top: 16px; }
+
     textarea {
       width: 100%;
       min-height: 220px;
@@ -29,79 +31,65 @@
       font-weight: 600;
     }
     button:hover { background: #efefef; }
-    pre {
-      margin: 0;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      background: #fafafa;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 13px;
-      line-height: 1.35;
-      min-height: 140px;
-    }
     .small { font-size: 13px; }
     code { background: #f3f3f3; padding: 2px 6px; border-radius: 6px; }
     ul { margin-top: 8px; }
 
     .resultWrap { display: grid; gap: 10px; }
 
-.day {
-  border: 1px solid rgba(0,0,0,0.15);
-  border-radius: 12px;
-  background: rgba(255,255,255,0.92);
-  overflow: hidden;
-}
+    .day {
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.92);
+      overflow: hidden;
+    }
 
-.day summary {
-  cursor: pointer;
-  padding: 12px 14px;
-  font-weight: 700;
-  user-select: none;
-}
+    .day summary {
+      cursor: pointer;
+      padding: 12px 14px;
+      font-weight: 700;
+      user-select: none;
+    }
 
-.day summary:hover { background: rgba(0,0,0,0.04); }
+    .day summary:hover { background: rgba(0,0,0,0.04); }
 
-.day .inside {
-  padding: 12px 14px;
-  border-top: 1px solid rgba(0,0,0,0.08);
-}
+    .day .inside {
+      padding: 12px 14px;
+      border-top: 1px solid rgba(0,0,0,0.08);
+    }
 
-.kv {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 6px 12px;
-  margin: 0 0 10px 0;
-  font-size: 13px;
-}
+    .kv {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 6px 12px;
+      margin: 0 0 10px 0;
+      font-size: 13px;
+    }
 
-.kv div { padding: 2px 0; }
+    .kv div { padding: 2px 0; }
 
-.badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  border: 1px solid rgba(0,0,0,0.15);
-  background: rgba(0,0,0,0.03);
-  margin-left: 8px;
-}
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid rgba(0,0,0,0.15);
+      background: rgba(0,0,0,0.03);
+      margin-left: 8px;
+    }
 
-.blockTitle { margin: 10px 0 6px; font-weight: 700; }
+    .blockTitle { margin: 10px 0 6px; font-weight: 700; }
 
-.mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  font-size: 13px;
-  white-space: pre-wrap;
-  word-break: break-word;
-  background: rgba(0,0,0,0.03);
-  border: 1px solid rgba(0,0,0,0.12);
-  border-radius: 10px;
-  padding: 10px;
-}
-
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: rgba(0,0,0,0.03);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px;
+      padding: 10px;
+    }
   </style>
 </head>
 
@@ -111,8 +99,8 @@
   <div class="card">
     <h3>Vstup z Excelu</h3>
     <p class="muted small">
-      Aplikace hledá v hlavičce sloupce <code>DATUM</code> a <code>CISLA SVARU</code>.
-      Ve sloupci "CISLA SVARU" může být např. <code>12</code>, <code>2-11</code>, <code>1,2</code>, <code>39,40</code>, nebo kombinace <code>1,2,5-7</code>.
+      Aplikace hledá v hlavičce sloupce <code>DATUM</code> a <code>ČÍSLA SVAR…</code>.
+      Ve sloupci čísel svaru může být např. <code>12</code>, <code>2-11</code>, <code>1,2</code>, <code>39,40</code>, nebo kombinace <code>1,2,5-7</code>.
     </p>
 
     <textarea id="excelInput" placeholder="Sem vlož tabulku z Excelu (Ctrl+V)..."></textarea>
@@ -127,26 +115,24 @@
       <summary class="muted" style="cursor:pointer;">Tipy (když to nic nenajde)</summary>
       <ul class="muted small">
         <li>Musí být vložená tabulka <b>včetně prvního řádku s hlavičkami</b>.</li>
-        <li>Názvy sloupců: <b>DATUM</b> a <b>CISLA SVARU</b> (diakritika nevadí).</li>
+        <li>Sloupce musí obsahovat něco jako <b>DATUM</b> a <b>ČÍSLA SVAR…</b>.</li>
       </ul>
     </details>
   </div>
 
-<div class="card">
-  <h3>Výsledek</h3>
-  <div id="result" class="resultWrap">
-    <div class="muted">Zatím nic.</div>
+  <div class="card">
+    <h3>Výsledek</h3>
+    <div id="result" class="resultWrap">
+      <div class="muted">Zatím nic.</div>
+    </div>
   </div>
-</div>
-
 
   <script>
     function _trim(s) {
-      return s.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
+      return String(s ?? "").replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
     }
 
     function _norm(s) {
-      // normalizace pro porovnání názvů sloupců
       return _trim(s).toLowerCase()
         .replace(/\s+/g, " ")
         .replace(/[áàä]/g, "a")
@@ -168,11 +154,12 @@
     function parseDateKey(raw) {
       return _trim(raw);
     }
-    
+
+    // supports: "12", "2-11", "1,2", "39,40", "12-18", "1,2,5-7"
     function parseWeldCellToNumbers(cellRaw) {
       let s = _trim(cellRaw ?? "");
       s = _normalizeDashes(s);
-      if (!s) return { ok: true, values: [] };
+      if (!s) return { ok: true, values: [], errors: [] };
 
       s = s.replace(/\s+/g, "");
 
@@ -188,29 +175,20 @@
         if (dash !== -1) {
           const left = part.slice(0, dash);
           const right = part.slice(dash + 1);
-          if (!left || !right) {
-            errors.push(`Neplatný rozsah "${partRaw}"`);
-            continue;
-          }
+          if (!left || !right) { errors.push(`Neplatný rozsah "${partRaw}"`); continue; }
+
           const a0 = Number(left);
           const b0 = Number(right);
-          if (!Number.isFinite(a0) || !Number.isFinite(b0)) {
-            errors.push(`Neplatné číslo v rozsahu "${partRaw}"`);
-            continue;
-          }
+          if (!Number.isFinite(a0) || !Number.isFinite(b0)) { errors.push(`Neplatné číslo v rozsahu "${partRaw}"`); continue; }
+
           let a = Math.trunc(a0), b = Math.trunc(b0);
           if (a > b) [a, b] = [b, a];
-          if (b - a > 2_000_000) {
-            errors.push(`Rozsah je příliš velký "${partRaw}"`);
-            continue;
-          }
+          if (b - a > 2_000_000) { errors.push(`Rozsah je příliš velký "${partRaw}"`); continue; }
+
           for (let i = a; i <= b; i++) values.push(i);
         } else {
           const n0 = Number(part);
-          if (!Number.isFinite(n0)) {
-            errors.push(`Neplatná hodnota "${partRaw}"`);
-            continue;
-          }
+          if (!Number.isFinite(n0)) { errors.push(`Neplatná hodnota "${partRaw}"`); continue; }
           values.push(Math.trunc(n0));
         }
       }
@@ -253,9 +231,8 @@
       let start = arr[0], prev = arr[0];
       for (let i = 1; i < arr.length; i++) {
         const x = arr[i];
-        if (x === prev + 1) {
-          prev = x;
-        } else {
+        if (x === prev + 1) prev = x;
+        else {
           parts.push(start === prev ? `${start}` : `${start}-${prev}`);
           start = prev = x;
         }
@@ -271,35 +248,27 @@
       const header = lines[0].split("\t");
       const normHeader = header.map(_norm);
 
-      // Najdi indexy sloupců
       const dateIdx = normHeader.findIndex(h => h === "datum" || h.startsWith("datum "));
-      const weldIdx = normHeader.findIndex(h =>
-        h.includes("cisla svaru") || h.includes("cila svaru") || h.includes("cisla svar") || h.includes("cisla svaru?")
-      );
-
       if (dateIdx === -1) return { ok: false, error: "Nenašel jsem sloupec 'DATUM' v první řádce." };
-      if (weldIdx === -1) return { ok: false, error: "Nenašel jsem sloupec 'CISLA SVARU' v první řádce." };
+
+      // tolerantní hledání pro "ČÍSLA SVARŮ / CISLA SVARU / ..."
+      const weldIdx = normHeader.findIndex(h => h.includes("cisla") && h.includes("svar"));
+      if (weldIdx === -1) return { ok: false, error: "Nenašel jsem sloupec 'ČÍSLA SVAR…' v první řádce." };
 
       const rows = [];
-      for (let i = 1; i < lines.length; i++) {
-        rows.push(lines[i].split("\t"));
-      }
+      for (let i = 1; i < lines.length; i++) rows.push(lines[i].split("\t"));
 
-      return { ok: true, header, dateIdx, weldIdx, rows };
+      return { ok: true, dateIdx, weldIdx, rows };
     }
 
-    // ------------------ Napojení na stránku ------------------
     const excelInput = document.getElementById("excelInput");
     const stats = document.getElementById("stats");
     const result = document.getElementById("result");
 
     function refreshStats() {
       const parsed = parsePastedTable(excelInput.value);
-      if (!parsed.ok) {
-        stats.textContent = "";
-        return;
-      }
-      stats.textContent = `Detekováno řádků: ${parsed.rows.length}. Sloupec datum: #${parsed.dateIdx+1}, čísla svaru: #${parsed.weldIdx+1}.`;
+      if (!parsed.ok) { stats.textContent = ""; return; }
+      stats.textContent = `Detekováno řádků: ${parsed.rows.length}. Sloupec datum: #${parsed.dateIdx + 1}, čísla svaru: #${parsed.weldIdx + 1}.`;
     }
 
     document.getElementById("processBtn").addEventListener("click", () => {
@@ -311,23 +280,17 @@
 
       const { dateIdx, weldIdx, rows } = parsed;
 
-      // group: date -> list of numbers (with duplicates)
       const byDate = new Map();
       const errors = [];
 
       for (let r = 0; r < rows.length; r++) {
         const cols = rows[r];
-
         const date = parseDateKey(cols[dateIdx] ?? "");
         const weldCell = cols[weldIdx] ?? "";
-
-        if (!date) continue; // ignoruj řádky bez data
+        if (!date) continue;
 
         const p = parseWeldCellToNumbers(weldCell);
-        if (p.errors && p.errors.length) {
-          // řádek v Excelu = r+2 (protože hlavička je 1)
-          errors.push(`Řádek ${r + 2} (${date}): ${p.errors.join("; ")} | hodnota: "${weldCell}"`);
-        }
+        if (p.errors.length) errors.push(`Řádek ${r + 2} (${date}): ${p.errors.join("; ")} | hodnota: "${weldCell}"`);
 
         if (!byDate.has(date)) byDate.set(date, []);
         const arr = byDate.get(date);
@@ -335,167 +298,106 @@
       }
 
       if (byDate.size === 0) {
-         result.innerHTML = `<div class="mono">Nenašel jsem žádná data (zkontroluj, že jsi vložil tabulku včetně hlavičky).</div>`;
+        result.innerHTML = `<div class="mono">Nenašel jsem žádná data (zkontroluj, že jsi vložil tabulku včetně hlavičky).</div>`;
         return;
       }
 
-      // Nastavení: chybějící počítat 1..max (doporučené)
       const missingMode = "1..max";
 
-      // seřaď data chronologicky (DD.MM.YYYY)
       const datesSorted = [...byDate.keys()].sort((a, b) => {
         const pa = a.split(".").map(x => parseInt(x, 10));
         const pb = b.split(".").map(x => parseInt(x, 10));
         if (pa.length !== 3 || pb.length !== 3) return a.localeCompare(b);
-        const da = new Date(pa[2], pa[1]-1, pa[0]).getTime();
-        const db = new Date(pb[2], pb[1]-1, pb[0]).getTime();
-        return da - db;
+        return new Date(pa[2], pa[1]-1, pa[0]) - new Date(pb[2], pb[1]-1, pb[0]);
       });
 
-      const out = [];
-      out.push(`Zpracováno dat: ${byDate.size}`);
-      out.push(`Režim chybějících: ${missingMode}`);
-      out.push("");
+      // Vykreslení UI
+      result.innerHTML = "";
+
+      const top = document.createElement("div");
+      top.className = "muted small";
+      top.textContent = `Zpracováno dat: ${byDate.size} • Režim chybějících: ${missingMode}`;
+      result.appendChild(top);
 
       for (const date of datesSorted) {
         const values = byDate.get(date);
-
         const { min, max, uniqueCount, duplicates, missing } = analyzeNumbers(values, missingMode);
 
-        out.push(`=== ${date} ===`);
-        out.push(`Záznamů po rozbalení: ${values.length}`);
-        out.push(`Unikátních čísel: ${uniqueCount}`);
-        out.push(`Min..Max ve vstupu: ${min ?? "-"} .. ${max ?? "-"}`);
+        const details = document.createElement("details");
+        details.className = "day";
 
-        if (!duplicates.length) {
-          out.push(`Duplicity: žádné ✅`);
-        } else {
-          out.push(`Duplicity (hodnota × počet):`);
-          for (const [v, c] of duplicates) out.push(`- ${v} × ${c}`);
-        }
+        const summary = document.createElement("summary");
+        summary.textContent = date;
 
-        if (max === null) {
-          out.push(`Chybějící: (žádná čísla)`);
-        } else if (!missing.length) {
-          out.push(`Chybějící (${missingMode === "min..max" ? `${min}..${max}` : `1..${max}`}): žádné ✅`);
-        } else {
-          out.push(`Chybějící (${missingMode === "min..max" ? `${min}..${max}` : `1..${max}`}):`);
-          out.push(formatAsRanges(missing));
-        }
+        const b1 = document.createElement("span");
+        b1.className = "badge";
+        b1.textContent = duplicates.length ? `Duplicity: ${duplicates.length}` : "Duplicity: 0";
 
-        out.push(""); // mezera mezi datumy
+        const b2 = document.createElement("span");
+        b2.className = "badge";
+        b2.textContent = (max === null) ? "Chybí: -" : `Chybí: ${missing.length}`;
+
+        summary.appendChild(b1);
+        summary.appendChild(b2);
+
+        const inside = document.createElement("div");
+        inside.className = "inside";
+
+        const kv = document.createElement("div");
+        kv.className = "kv";
+        kv.innerHTML = `
+          <div class="muted">Záznamů po rozbalení</div><div>${values.length}</div>
+          <div class="muted">Unikátních čísel</div><div>${uniqueCount}</div>
+          <div class="muted">Min..Max ve vstupu</div><div>${min ?? "-"} .. ${max ?? "-"}</div>
+        `;
+        inside.appendChild(kv);
+
+        const dupTitle = document.createElement("div");
+        dupTitle.className = "blockTitle";
+        dupTitle.textContent = "Duplicity";
+        inside.appendChild(dupTitle);
+
+        const dupBox = document.createElement("div");
+        dupBox.className = "mono";
+        dupBox.textContent = duplicates.length ? duplicates.map(([v, c]) => `${v} × ${c}`).join("\n") : "Žádné ✅";
+        inside.appendChild(dupBox);
+
+        const missTitle = document.createElement("div");
+        missTitle.className = "blockTitle";
+        missTitle.textContent = "Chybějící";
+        inside.appendChild(missTitle);
+
+        const missBox = document.createElement("div");
+        missBox.className = "mono";
+        if (max === null) missBox.textContent = "Žádná čísla";
+        else if (!missing.length) missBox.textContent = `Žádné ✅ (v rozsahu 1..${max})`;
+        else missBox.textContent = formatAsRanges(missing);
+        inside.appendChild(missBox);
+
+        details.appendChild(summary);
+        details.appendChild(inside);
+        result.appendChild(details);
       }
 
       if (errors.length) {
-        out.push("=== VAROVÁNÍ / CHYBY ===");
-        out.push(`Počet problémů: ${errors.length}`);
-        for (const e of errors.slice(0, 15)) out.push(`- ${e}`);
-        if (errors.length > 15) out.push(`- ... +${errors.length - 15} dalších`);
+        const warn = document.createElement("details");
+        warn.className = "day";
+
+        const sum = document.createElement("summary");
+        sum.textContent = `Varování / chyby (${errors.length})`;
+
+        const inside = document.createElement("div");
+        inside.className = "inside";
+
+        const box = document.createElement("div");
+        box.className = "mono";
+        box.textContent = errors.slice(0, 30).join("\n") + (errors.length > 30 ? `\n... +${errors.length - 30} dalších` : "");
+
+        inside.appendChild(box);
+        warn.appendChild(sum);
+        warn.appendChild(inside);
+        result.appendChild(warn);
       }
-
-      result.innerHTML = ""; // smaž starý výstup
-
-// malý header nahoře
-const top = document.createElement("div");
-top.className = "muted small";
-top.textContent = `Zpracováno dat: ${byDate.size} • Režim chybějících: ${missingMode}`;
-result.appendChild(top);
-
-for (const date of datesSorted) {
-  const values = byDate.get(date);
-  const { min, max, uniqueCount, duplicates, missing } = analyzeNumbers(values, missingMode);
-
-  const details = document.createElement("details");
-  details.className = "day";
-
-  // summary text + badge
-  const summary = document.createElement("summary");
-
-  const dupBadge = duplicates.length ? `Duplicity: ${duplicates.length}` : "Duplicity: 0";
-  const missBadge = (max === null) ? "Chybí: -" : `Chybí: ${missing.length}`;
-
-  summary.textContent = date;
-
-  const b1 = document.createElement("span");
-  b1.className = "badge";
-  b1.textContent = dupBadge;
-
-  const b2 = document.createElement("span");
-  b2.className = "badge";
-  b2.textContent = missBadge;
-
-  summary.appendChild(b1);
-  summary.appendChild(b2);
-
-  // inside content
-  const inside = document.createElement("div");
-  inside.className = "inside";
-
-  // kv stats
-  const kv = document.createElement("div");
-  kv.className = "kv";
-  kv.innerHTML = `
-    <div class="muted">Záznamů po rozbalení</div><div>${values.length}</div>
-    <div class="muted">Unikátních čísel</div><div>${uniqueCount}</div>
-    <div class="muted">Min..Max ve vstupu</div><div>${min ?? "-"} .. ${max ?? "-"}</div>
-  `;
-  inside.appendChild(kv);
-
-  // duplicates block
-  const dupTitle = document.createElement("div");
-  dupTitle.className = "blockTitle";
-  dupTitle.textContent = "Duplicity";
-  inside.appendChild(dupTitle);
-
-  const dupBox = document.createElement("div");
-  dupBox.className = "mono";
-
-  if (!duplicates.length) {
-    dupBox.textContent = "Žádné ✅";
-  } else {
-    dupBox.textContent = duplicates.map(([v, c]) => `${v} × ${c}`).join("\n");
-  }
-  inside.appendChild(dupBox);
-
-  // missing block
-  const missTitle = document.createElement("div");
-  missTitle.className = "blockTitle";
-  missTitle.textContent = "Chybějící";
-  inside.appendChild(missTitle);
-
-  const missBox = document.createElement("div");
-  missBox.className = "mono";
-
-  if (max === null) {
-    missBox.textContent = "Žádná čísla";
-  } else if (!missing.length) {
-    missBox.textContent = `Žádné ✅ (v rozsahu ${missingMode === "min..max" ? `${min}..${max}` : `1..${max}`})`;
-  } else {
-    missBox.textContent = formatAsRanges(missing);
-  }
-  inside.appendChild(missBox);
-
-  details.appendChild(summary);
-  details.appendChild(inside);
-
-  result.appendChild(details);
-}
-
-// chyby až dolů
-if (errors.length) {
-  const warn = document.createElement("details");
-  warn.className = "day";
-  const sum = document.createElement("summary");
-  sum.textContent = `Varování / chyby (${errors.length})`;
-  const inside = document.createElement("div");
-  inside.className = "inside";
-  const box = document.createElement("div");
-  box.className = "mono";
-  box.textContent = errors.slice(0, 30).join("\n") + (errors.length > 30 ? `\n... +${errors.length - 30} dalších` : "");
-  inside.appendChild(box);
-  warn.appendChild(sum);
-  warn.appendChild(inside);
-  result.appendChild(warn);
     });
 
     document.getElementById("clearBtn").addEventListener("click", () => {
