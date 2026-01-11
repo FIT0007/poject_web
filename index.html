@@ -1,100 +1,201 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>C++ program – webová verze</title>
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 32px; max-width: 1100px; }
-    textarea { width: 100%; min-height: 220px; padding: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-    button { padding: 10px 14px; cursor: pointer; }
-    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin-top: 16px; }
-    .muted { color: #555; }
-    pre { white-space: pre-wrap; word-break: break-word; }
-  </style>
-</head>
-<body>
-  <h1>C++ program – webová verze</h1>
-  <p class="muted">
-    Nejrychlejší: v Excelu označ data → Ctrl+C → tady klikni → Ctrl+V → Zpracovat.
-    (Upload souboru můžeš nechat jako zálohu.)
-  </p>
+// ============================================================
+// Excel 1-sloupec → duplicity + chybějící hodnoty
+// - čte data z textarea s id="excelInput"
+// - výsledek píše do <pre id="result">
+// - statistiku píše do <span id="stats">
+// - tlačítka: #processBtn a #clearBtn
+// ============================================================
 
-  <div class="card">
-    <h3>Vlož data z Excelu</h3>
-    <textarea id="excelInput" placeholder="Sem vlož data z Excelu (Ctrl+V)..."></textarea>
+function _trim(s) {
+  return s.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
+}
 
-    <div class="row" style="margin-top:12px;">
-      <button id="processBtn">Zpracovat</button>
-      <button id="clearBtn">Vymazat</button>
-      <span id="stats" class="muted"></span>
-    </div>
-  </div>
+/**
+ * Pokusí se z řádku vytáhnout číslo.
+ * - vezme první buňku (když tam je tabulátor)
+ * - toleruje desetinnou čárku (12,0 → 12.0)
+ * - vrací celé číslo (Math.trunc)
+ */
+function parseNumberFromLine(rawLine) {
+  const line = _trim(rawLine);
+  if (!line) return { ok: false };
 
-  <div class="card">
-    <h3>Výsledek</h3>
-    <pre id="result">Zatím nic.</pre>
-  </div>
+  // Pokud by uživatel omylem vložil víc sloupců, vezmeme jen první buňku:
+  const firstCell = _trim(line.split("\t")[0]);
 
-  <script>
-    function parseExcelClipboard(text) {
-      // odstraní přebytečné prázdné řádky na konci/začátku
-      const trimmed = text.replace(/\r/g, "").trim();
-      if (!trimmed) return [];
+  // toleruj desetinnou čárku
+  const normalized = firstCell.replace(",", ".");
 
-      const lines = trimmed.split("\n");
-      // Excel: sloupce oddělené tabulátorem
-      const table = lines.map(line => line.split("\t"));
-      return table;
+  const n = Number(normalized);
+  if (!Number.isFinite(n)) return { ok: false };
+
+  return { ok: true, value: Math.trunc(n) };
+}
+
+/**
+ * Načte čísla z jednoho sloupce (po řádcích).
+ * Vrací:
+ * - values: pole celých čísel
+ * - badLines: pole řádků, které nešly převést na číslo
+ */
+function readSingleColumn(text) {
+  const lines = text.replace(/\r/g, "").split("\n");
+  const values = [];
+  const badLines = [];
+
+  for (const raw of lines) {
+    const r = parseNumberFromLine(raw);
+    if (!r.ok) {
+      if (_trim(raw) !== "") badLines.push(raw);
+      continue;
     }
+    values.push(r.value);
+  }
+  return { values, badLines };
+}
 
-    function exampleProcessing(table) {
-      // TODO: sem dáme vaši skutečnou logiku (z C++ programu)
-      // Pro teď jen ukázka:
-      const rows = table.length;
-      const cols = Math.max(...table.map(r => r.length));
-      const firstRow = table[0];
+/**
+ * Spočítá duplicity a chybějící hodnoty.
+ * missingMode:
+ * - "1..max"  (default) – hledá chybějící od 1 do max
+ * - "min..max" – hledá chybějící od min do max
+ */
+function analyze(values, missingMode = "1..max") {
+  if (values.length === 0) {
+    return {
+      min: null,
+      max: null,
+      counts: new Map(),
+      duplicates: [],
+      missing: []
+    };
+  }
 
-      return [
-        `Načteno řádků: ${rows}`,
-        `Max. sloupců v řádku: ${cols}`,
-        `První řádek: ${JSON.stringify(firstRow)}`
-      ].join("\n");
+  const counts = new Map();
+  let min = values[0];
+  let max = values[0];
+
+  for (const v of values) {
+    counts.set(v, (counts.get(v) || 0) + 1);
+    if (v < min) min = v;
+    if (v > max) max = v;
+  }
+
+  const duplicates = [];
+  for (const [val, c] of counts.entries()) {
+    if (c >= 2) duplicates.push([val, c]);
+  }
+  duplicates.sort((a, b) => a[0] - b[0]);
+
+  let start = 1;
+  if (missingMode === "min..max") start = min;
+
+  const missing = [];
+  for (let i = start; i <= max; i++) {
+    if (!counts.has(i)) missing.push(i);
+  }
+
+  return { min, max, counts, duplicates, missing };
+}
+
+/**
+ * Zformátuje seznam chybějících čísel do rozsahů:
+ * [1,2,3,7,9,10] → "1-3, 7, 9-10"
+ */
+function formatAsRanges(nums) {
+  if (nums.length === 0) return "";
+  const arr = [...nums].sort((a, b) => a - b);
+
+  const parts = [];
+  let start = arr[0];
+  let prev = arr[0];
+
+  for (let i = 1; i < arr.length; i++) {
+    const x = arr[i];
+    if (x === prev + 1) {
+      prev = x;
+      continue;
     }
+    // ukonči interval
+    parts.push(start === prev ? `${start}` : `${start}-${prev}`);
+    start = prev = x;
+  }
+  parts.push(start === prev ? `${start}` : `${start}-${prev}`);
 
-    const excelInput = document.getElementById("excelInput");
-    const stats = document.getElementById("stats");
-    const result = document.getElementById("result");
+  return parts.join(", ");
+}
 
-    function refreshStats() {
-      const table = parseExcelClipboard(excelInput.value);
-      if (table.length === 0) {
-        stats.textContent = "";
-        return;
-      }
-      const rows = table.length;
-      const cols = Math.max(...table.map(r => r.length));
-      stats.textContent = `Detekováno: ${rows} řádků, až ${cols} sloupců (tabulátory).`;
-    }
+// ===================== Napojení na stránku =====================
 
-    document.getElementById("processBtn").addEventListener("click", () => {
-      const table = parseExcelClipboard(excelInput.value);
-      if (table.length === 0) {
-        result.textContent = "Nevložil jsi žádná data.";
-        return;
-      }
-      result.textContent = exampleProcessing(table);
-    });
+const excelInput = document.getElementById("excelInput");
+const stats = document.getElementById("stats");
+const result = document.getElementById("result");
 
-    document.getElementById("clearBtn").addEventListener("click", () => {
-      excelInput.value = "";
-      result.textContent = "Zatím nic.";
-      stats.textContent = "";
-    });
+function refreshStats() {
+  const { values, badLines } = readSingleColumn(excelInput.value);
+  if (values.length === 0) {
+    stats.textContent = "";
+    return;
+  }
+  stats.textContent = `Načteno ${values.length} hodnot. Neplatné řádky: ${badLines.length}.`;
+}
 
-    excelInput.addEventListener("input", refreshStats);
-    excelInput.addEventListener("paste", () => setTimeout(refreshStats, 0));
-  </script>
-</body>
-</html>
+document.getElementById("processBtn").addEventListener("click", () => {
+  const { values, badLines } = readSingleColumn(excelInput.value);
+
+  if (values.length === 0) {
+    result.textContent = "Nevložil jsi žádná čísla (zkus Ctrl+V z Excelu).";
+    return;
+  }
+
+  // Změň na "min..max", pokud chceš chybějící počítat od minima
+  const missingMode = "1..max";
+
+  const { min, max, duplicates, missing } = analyze(values, missingMode);
+
+  const out = [];
+  out.push(`Načteno hodnot: ${values.length}`);
+  out.push(`Rozsah ve vstupu: ${min} .. ${max}`);
+  out.push("");
+
+  if (duplicates.length === 0) {
+    out.push("Duplicitní hodnoty: žádné ✅");
+  } else {
+    out.push("Duplicitní hodnoty (hodnota × počet):");
+    for (const [v, c] of duplicates) out.push(`- ${v} × ${c}`);
+  }
+
+  out.push("");
+  const missingLabel = (missingMode === "min..max")
+    ? `Chybějící hodnoty (${min}..${max})`
+    : `Chybějící hodnoty (1..${max})`;
+
+  if (missing.length === 0) {
+    out.push(`${missingLabel}: žádné ✅`);
+  } else {
+    out.push(`${missingLabel}:`);
+    // dvě formy: dlouhý seznam + rozsahy
+    out.push(missing.join(" "));
+    out.push("");
+    out.push("Jako rozsahy:");
+    out.push(formatAsRanges(missing));
+  }
+
+  if (badLines.length) {
+    out.push("");
+    out.push(`Ignorované neplatné řádky (${badLines.length}):`);
+    for (const s of badLines.slice(0, 10)) out.push(`- ${s}`);
+    if (badLines.length > 10) out.push(`- ... +${badLines.length - 10} dalších`);
+  }
+
+  result.textContent = out.join("\n");
+});
+
+document.getElementById("clearBtn").addEventListener("click", () => {
+  excelInput.value = "";
+  result.textContent = "Zatím nic.";
+  stats.textContent = "";
+});
+
+excelInput.addEventListener("input", refreshStats);
+excelInput.addEventListener("paste", () => setTimeout(refreshStats, 0));
