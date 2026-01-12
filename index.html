@@ -308,7 +308,7 @@
       <div>
         <h1>Kontrola čísel svárů podle data</h1>
         <div class="muted small" style="margin-top:6px;">
-          Kontroluje se: <b>duplicity</b> a <b>chybějící čísla v rozsahu min..max</b> pro každý den.
+          Kontroluje se: <b>duplicity</b> a <b>chybějící čísla v rozsahu 1..max</b> pro každý den.
         </div>
       </div>
 
@@ -356,7 +356,7 @@
           Kontroluje:
           <ul style="margin:8px 0 0 18px;">
             <li>duplicity v rámci dne</li>
-            <li>chybějící čísla mezi min..max v rámci dne</li>
+            <li>chybějící čísla mezi <b>1..max</b> v rámci dne</li>
           </ul>
         </div>
       </div>
@@ -370,7 +370,7 @@
         </div>
 
         <div class="pill">
-          <label class="checkbox" title="Zobrazit jen dny, kde je duplicita nebo chybí číslo v min..max">
+          <label class="checkbox" title="Zobrazit jen dny, kde je duplicita nebo chybí číslo v 1..max">
             <input type="checkbox" id="onlyErrors" />
             🔍 filtr: jen dny s chybami
           </label>
@@ -501,9 +501,10 @@
       }
       duplicates.sort((a,b)=>a[0]-b[0]);
 
+      // ✅ ZMĚNA: chybějící počítáme v rozsahu 1..max (každý den začíná 1)
       const missing = [];
-      if (min !== null && max !== null){
-        for (let i=min;i<=max;i++){
+      if (max !== null){
+        for (let i=1;i<=max;i++){
           if (!counts.has(i)) missing.push(i);
         }
       }
@@ -664,7 +665,7 @@
         kv.innerHTML = `
           <div class="k">Rozbalených čísel</div><div>${day.totalExpanded}</div>
           <div class="k">Unikátních čísel</div><div>${day.uniqueCount}</div>
-          <div class="k">Rozsah dne (min..max)</div><div>${day.min ?? "-"} .. ${day.max ?? "-"}</div>
+          <div class="k">Rozsah kontroly (1..max)</div><div>${day.max ?? "-"}</div>
         `;
         inside.appendChild(kv);
 
@@ -682,7 +683,7 @@
 
         const missTitle = document.createElement("div");
         missTitle.className = "blockTitle";
-        missTitle.textContent = "Chybějící v min..max";
+        missTitle.textContent = "Chybějící v 1..max";
         inside.appendChild(missTitle);
 
         const missBox = document.createElement("div");
@@ -690,7 +691,7 @@
         if (day.max === null){
           missBox.textContent = "Žádná čísla v tomto dni.";
         } else if (!day.missing.length){
-          missBox.textContent = `Žádné ✅ (v rozsahu ${day.min}..${day.max})`;
+          missBox.textContent = `Žádné ✅ (v rozsahu 1..${day.max})`;
         } else {
           missBox.textContent = formatAsRanges(day.missing);
         }
@@ -787,23 +788,6 @@
       renderDays();
     }
 
-    // ------------------ Demo data ------------------
-    function loadDemo(){
-      excelInput.value =
-`DATUM\tCISLA SVARU
-04.09.2025\t1
-04.09.2025\t2-5
-04.09.2025\t4
-08.09.2025\t1-3
-08.09.2025\t5
-08.09.2025\t6-8
-09.09.2025\t10,12,13-15
-09.09.2025\t11
-09.09.2025\t14`;
-      refreshStats();
-      process();
-    }
-
     // ------------------ Dark mode (persist) ------------------
     const themeCheckbox = document.getElementById("themeCheckbox");
     const themeLabel = document.getElementById("themeLabel");
@@ -811,10 +795,7 @@
     function applyTheme(isDark){
       document.body.classList.toggle("dark", isDark);
       themeCheckbox.checked = isDark;
-
-      // TADY je důležité: už to nepřepisuje emoji pryč
       themeLabel.textContent = isDark ? "🌙 Dark mode" : "☀️ Light mode";
-
       localStorage.setItem("weld_theme_dark", isDark ? "1" : "0");
     }
 
